@@ -22,28 +22,39 @@ black_img = [pygame.image.load("assets\\pieces\\PawnB.png"),
 
 ##################################################################################
 board = pygame.display.set_mode((1200, 800))
-active_pieces = []
-# create grid (y,x )
+dont_show_this_piece = None
 
 
-def move_pieces(piece, position):
-    pass
+def show_posibble_moves(list):
+    for tubl in list:
+        y, x = grid()[tubl[0]][tubl[1]]
+        pygame.draw.rect(board, (255, 0, 0), (x, y, 80, 80), 1)
 
 
-def create_pices(piece, color, restart_position):
+def piece_follow_mouse(piece):
+    global dont_show_this_piece
+    x, y = pygame.mouse.get_pos()
+    dont_show_this_piece = piece.id
+    if piece.color == 0:  # white
+        board.blit(white_img[piece.piece], (x-40, y-40))
+    else:  # black
+        board.blit(black_img[piece.piece], (x-40, y-40))
+
+
+def blit_piece(piece, color, restart_x, restar_y, id):
     global active_pieces
     # check color than blit images of coresponding pieces at cordinates of grid
-    x, y = restart_position
-    if color == 0:  # white
-        board.blit(white_img[piece], (create_grid()[y][x]))
-    else:  # black
-        board.blit(black_img[piece], (create_grid()[y][x]))
+
+    if color == 0 and id != dont_show_this_piece:  # white
+        board.blit(white_img[piece], (grid()[restar_y][restart_x]))
+    elif color == 1 and id != dont_show_this_piece:  # black
+        board.blit(black_img[piece], (grid()[restar_y][restart_x]))
 
 
-def create_grid():
+def grid():
     # grid start 82, 86 size 80*80
-    start_x = 82
-    start_y = 84
+    start_x = 86
+    start_y = 82
     pcs_size = 80
     grid = [
         [[], [], [], [], [], [], [], []],
@@ -54,7 +65,6 @@ def create_grid():
         [[], [], [], [], [], [], [], []],
         [[], [], [], [], [], [], [], []],
         [[], [], [], [], [], [], [], []],
-
     ]
     for y in range(8):
         for x in range(8):  # fill list with coridnates of grid
@@ -62,8 +72,10 @@ def create_grid():
     return grid
 
 
-def display_update():
+def show_pieces():
+    for pcs in logic.pieces:
+        blit_piece(pcs.piece, pcs.color, pcs.curr_x, pcs.curr_y, pcs.id)
+
+
+def display():
     board.blit(bg, (0, 0))
-    create_grid()
-    logic.restart_pieces()
-    pygame.display.update()

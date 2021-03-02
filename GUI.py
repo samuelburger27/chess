@@ -26,9 +26,11 @@ dont_show_this_piece = None
 
 
 def show_posibble_moves(list):
-    for tubl in list:
-        y, x = grid()[tubl[0]][tubl[1]]
-        pygame.draw.rect(board, (255, 0, 0), (x, y, 80, 80), 1)
+    if len(list) != 0:
+        for tubl in list:
+            if len(tubl) == 2:
+                y, x = grid()[tubl[0]][tubl[1]]
+                pygame.draw.rect(board, (255, 0, 0), (x, y, 80, 80), 1)
 
 
 def piece_follow_mouse(piece):

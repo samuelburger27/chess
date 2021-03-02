@@ -28,6 +28,7 @@ class playing_pieces():
         self.curr_x, self.curr_y = curr_position
         self.id = id
         self.posible_moves = []
+        self.have_rules = False
 
     def is_mouse_over(self, pos):
         # return true if this piece is clicked
@@ -84,6 +85,8 @@ class playing_pieces():
                             self.posible_moves.append((x, y))
 
     def rook_rules(self):
+        # TODOO make it look better
+
         boardering_pieces = []
         x_plus = False
         x_minus = False
@@ -93,61 +96,165 @@ class playing_pieces():
         def is_there(x, y):
             for pcs in boardering_pieces:
                 if pcs.get_current_position() == (x, y):
-                    print("YEA")
-                    # if pcs.color == self.color:
-                    #     self.posible_moves.pop(
-                    #         self.posible_moves.index((x, y)))
                     return True
             return False
 
-        for xs in range(8):
-            if xs != self.curr_x:
-                self.posible_moves.append((xs, self.curr_y))
-            if xs != self.curr_y:
-                self.posible_moves.append((self.curr_x, xs))
-
+        def find_piece(x, y):
+            for pcs in boardering_pieces:
+                if pcs.get_current_position() == (x, y):
+                    return pcs
+        # find rows and collums pieces
         for pcs in pieces:
             if (pcs.curr_x == self.curr_x and pcs.id != self.id) or (pcs.curr_y == self.curr_y and pcs.id != self.id):
                 boardering_pieces.append(pcs)
 
-        for i in range(8):
+        # check
+        for i in range(1, 8):
             if self.curr_x+i < 8:
                 if is_there(self.curr_x+i, self.curr_y) and not x_plus:
                     x_plus = True
-                elif x_plus == True:
-                    self.posible_moves.pop(self.posible_moves.index(
-                        (self.curr_x+i, self.curr_y)))
+                    if self.color != find_piece((self.curr_x+i), self.curr_y).color:
+                        self.posible_moves.append((self.curr_x+i, self.curr_y))
+                if x_plus != True:
+                    self.posible_moves.append((self.curr_x+i, self.curr_y))
 
-            if self.curr_x-i > 0:
+            if self.curr_x-i > -1:
                 if is_there(self.curr_x-i, self.curr_y) and not x_minus:
                     x_minus = True
-                elif x_minus == True:
-                    self.posible_moves.pop(self.posible_moves.index(
-                        (self.curr_x-i, self.curr_y)))
+                    if self.color != find_piece((self.curr_x-i), self.curr_y).color:
+                        self.posible_moves.append((self.curr_x-i, self.curr_y))
+                if x_minus != True:
+                    self.posible_moves.append((self.curr_x-i, self.curr_y))
 
             if self.curr_y+i < 8:
-                if is_there(self.curr_x, self.curr_y+1) and not y_plus:
+                if is_there(self.curr_x, self.curr_y+i) and not y_plus:
                     y_plus = True
-                elif y_plus == True:
-                    self.posible_moves.pop(self.posible_moves.index(
-                        (self.curr_x, self.curr_y+1)))
-
-            if self.curr_y-i > 0:
-                if is_there(self.curr_x, self.curr_y-1) and not y_minus:
+                    if self.color != find_piece((self.curr_x), self.curr_y+i).color:
+                        self.posible_moves.append((self.curr_x, self.curr_y+i))
+                if y_plus != True:
+                    self.posible_moves.append((self.curr_x, self.curr_y+i))
+            if self.curr_y-i > -1:
+                if is_there(self.curr_x, self.curr_y-i) and not y_minus:
                     y_minus = True
-                elif y_minus == True:
-                    self.posible_moves.pop(self.posible_moves.index(
-                        (self.curr_x, self.curr_y-1)))
+                    if self.color != find_piece((self.curr_x), self.curr_y-i).color:
+                        self.posible_moves.append((self.curr_x, self.curr_y-i))
+                if y_minus != True:
+                    self.posible_moves.append((self.curr_x, self.curr_y-i))
+
+    def knight_rules(self):
+        def find_piece(x, y):
+            for pc in pieces:
+                if pc.get_current_position() == (x, y):
+                    return pc
+            return False
+        # check if any of the posiblle 8 position can be used
+        if (self.curr_x - 1 > -1 and self.curr_x-1 < 8) and (self.curr_y - 2 > -1 and self.curr_y - 2 < 8):
+            if not find_piece(self.curr_x-1, self.curr_y-2) or find_piece(self.curr_x-1, self.curr_y-2).color != self.color:
+                self.posible_moves.append((self.curr_x-1, self.curr_y-2))
+
+        if (self.curr_x + 1 > -1 and self.curr_x+1 < 8) and (self.curr_y - 2 > -1 and self.curr_y - 2 < 8):
+            if not find_piece(self.curr_x+1, self.curr_y-2) or find_piece(self.curr_x+1, self.curr_y-2).color != self.color:
+                self.posible_moves.append((self.curr_x+1, self.curr_y-2))
+
+        if (self.curr_x - 1 > -1 and self.curr_x-1 < 8) and (self.curr_y + 2 > -1 and self.curr_y + 2 < 8):
+            if not find_piece(self.curr_x-1, self.curr_y+2) or find_piece(self.curr_x-1, self.curr_y+2).color != self.color:
+                self.posible_moves.append((self.curr_x-1, self.curr_y+2))
+
+        if (self.curr_x + 1 > -1 and self.curr_x+1 < 8) and (self.curr_y + 2 > -1 and self.curr_y + 2 < 8):
+            if not find_piece(self.curr_x+1, self.curr_y+2) or find_piece(self.curr_x+1, self.curr_y+2).color != self.color:
+                self.posible_moves.append((self.curr_x+1, self.curr_y+2))
+
+        if (self.curr_x - 2 > -1 and self.curr_x-2 < 8) and (self.curr_y - 1 > -1 and self.curr_y - 1 < 8):
+            if not find_piece(self.curr_x-2, self.curr_y-1) or find_piece(self.curr_x-2, self.curr_y-1).color != self.color:
+                self.posible_moves.append((self.curr_x-2, self.curr_y-1))
+
+        if (self.curr_x + 2 > -1 and self.curr_x+2 < 8) and (self.curr_y - 1 > -1 and self.curr_y - 1 < 8):
+            if not find_piece(self.curr_x+2, self.curr_y-1) or find_piece(self.curr_x+2, self.curr_y-1).color != self.color:
+                self.posible_moves.append((self.curr_x+2, self.curr_y-1))
+
+        if (self.curr_x - 2 > -1 and self.curr_x-2 < 8) and (self.curr_y + 1 > -1 and self.curr_y + 1 < 8):
+            if not find_piece(self.curr_x-2, self.curr_y+1) or find_piece(self.curr_x-2, self.curr_y+1).color != self.color:
+                self.posible_moves.append((self.curr_x-2, self.curr_y+1))
+
+        if (self.curr_x + 2 > -1 and self.curr_x+2 < 8) and (self.curr_y + 1 > -1 and self.curr_y + 1 < 8):
+            if not find_piece(self.curr_x+2, self.curr_y+1) or find_piece(self.curr_x+2, self.curr_y+1).color != self.color:
+                self.posible_moves.append((self.curr_x+2, self.curr_y+1))
+
+    def bishop_rules(self):
+
+        def find_piece(x, y):
+            for pcs in pieces:
+                if pcs.get_current_position() == (x, y):
+                    return pcs
+            return False
+        var1 = False
+        var2 = False
+        var3 = False
+        var4 = False
+        for i in range(1, 8):
+            if (self.curr_x+i > -1 and self.curr_x+i < 8) and (self.curr_y+i > -1 and self.curr_y+i < 8):
+                if find_piece(self.curr_x+i, self.curr_y+i) != False and var1 == False:
+                    if self.color != find_piece(self.curr_x+i, self.curr_y+i).color:
+                        self.posible_moves.append(
+                            (self.curr_x+i, self.curr_y+i))
+                    var1 = True
+                elif not var1:
+                    self.posible_moves.append((self.curr_x+i, self.curr_y+i))
+
+            if (self.curr_x-i > -1 and self.curr_x-i < 8) and (self.curr_y-i > -1 and self.curr_y-i < 8):
+                if find_piece(self.curr_x-i, self.curr_y-i) != False and var2 == False:
+                    if self.color != find_piece(self.curr_x-i, self.curr_y-i).color:
+                        self.posible_moves.append(
+                            (self.curr_x-i, self.curr_y-i))
+                    var2 = True
+                elif not var2:
+                    self.posible_moves.append((self.curr_x-i, self.curr_y-i))
+
+            if (self.curr_x+i > -1 and self.curr_x+i < 8) and (self.curr_y-i > -1 and self.curr_y-i < 8):
+                if find_piece(self.curr_x+i, self.curr_y-i) != False and var3 == False:
+                    if self.color != find_piece(self.curr_x+i, self.curr_y-i).color:
+                        self.posible_moves.append(
+                            (self.curr_x+i, self.curr_y-i))
+                    var3 = True
+                elif not var3:
+                    self.posible_moves.append((self.curr_x+i, self.curr_y-i))
+
+            if (self.curr_x-i > -1 and self.curr_x-i < 8) and (self.curr_y+i > -1 and self.curr_y+i < 8):
+                if find_piece(self.curr_x-i, self.curr_y+i) != False and var4 == False:
+                    if self.color != find_piece(self.curr_x-i, self.curr_y+i).color:
+                        self.posible_moves.append(
+                            (self.curr_x-i, self.curr_y+i))
+                    var4 = True
+                elif not var4:
+                    self.posible_moves.append((self.curr_x-i, self.curr_y+i))
+
+    def queen_rules(self):
+        self.rook_rules()
+        self.bishop_rules()
+
+    def king_rules(self):
+        pass
 
     def get_rules_for_current_piece(self):
-        if self.piece == 0:
-            self.pawn_rules()
-        if self.piece == 1:
-            self.rook_rules()
+        if not self.have_rules:
+            self.have_rules = True
+            if self.piece == 0:
+                self.pawn_rules()
+            elif self.piece == 1:
+                self.rook_rules()
+            elif self.piece == 2:
+                self.knight_rules()
+            elif self.piece == 3:
+                self.bishop_rules()
+            elif self.piece == 4:
+                self.queen_rules()
+            else:
+                self.king_rules()
         return self.posible_moves
 
     def clear_posibble_moves(self):
         self.posible_moves = []
+        self.have_rules = False
 
 
 def restart_pieces():
@@ -210,12 +317,19 @@ def find_wanted_destiantion():
                 return (j, i)
 
 
+def clear_all_poss_moves():
+    global pieces
+    for pc in pieces:
+        pc.clear_posibble_moves()
+
+
 def update_piece_pos(piece):
-    global current_turn
+    global current_turn, pieces
     # check if its correct turn to go for the color
     if current_turn % 2 == piece.color:
         for lst in piece.posible_moves:
             if lst == find_wanted_destiantion():
+                clear_all_poss_moves()
                 piece.curr_x = find_wanted_destiantion()[0]
                 piece.curr_y = find_wanted_destiantion()[1]
 
@@ -226,7 +340,6 @@ def update_piece_pos(piece):
                         pieces.index(is_kicked(find_wanted_destiantion(), piece))))
 
                 current_turn += 1
-                piece.clear_posibble_moves()
                 break
 
 

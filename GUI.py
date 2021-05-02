@@ -1,6 +1,7 @@
 import pygame
-import logic
 
+import logic
+from button import button
 pygame.init()
 
 # load images
@@ -20,9 +21,54 @@ black_img = [pygame.image.load("assets\\pieces\\PawnB.png"),
              pygame.image.load("assets\\pieces\\QueenB.png"),
              pygame.image.load("assets\\pieces\\KingB.png")]
 
+white_conver_img = [pygame.image.load("assets\\pawn_transformation_UI\\black_basic.png"),
+                    pygame.image.load(
+                        "assets\\pawn_transformation_UI\\black_bishop.png"),
+                    pygame.image.load(
+                        "assets\\pawn_transformation_UI\\black_knight.png"),
+                    pygame.image.load(
+                        "assets\\pawn_transformation_UI\\black_queen.png"),
+                    pygame.image.load(
+                        "assets\\pawn_transformation_UI\\black_rook.png"),
+                    ]
+black_convert_img = [pygame.image.load("assets\\pawn_transformation_UI\\black_basic.png"),
+                     pygame.image.load(
+                         "assets\\pawn_transformation_UI\\black_bishop.png"),
+                     pygame.image.load(
+                         "assets\\pawn_transformation_UI\\black_knight.png"),
+                     pygame.image.load(
+                         "assets\\pawn_transformation_UI\\black_queen.png"),
+                     pygame.image.load(
+                         "assets\\pawn_transformation_UI\\black_rook.png"),
+                     ]
+
+
 ##################################################################################
 board = pygame.display.set_mode((1200, 800))
 dont_show_this_piece = None
+show_convert_UI = False
+
+
+def conver_pawn_UI():
+    x, y = pygame.mouse.get_pos()
+    pos_x = 256
+    pos_y = 346
+    if logic.current_turn % 2 == 0:  # white color
+        used_list = white_conver_img
+    else:
+        used_list = black_convert_img
+
+    if (x > pos_x and x < pos_x + (285)) and (y > pos_y and y < pos_y+109):
+        if x < pos_x + (285/4):
+            board.blit(used_list[1], (pos_x, pos_y))
+        elif x < pos_x + (285/2):
+            board.blit(used_list[2], (pos_x, pos_y))
+        elif x < pos_x + ((285/1)*3):
+            board.blit(used_list[3], (pos_x, pos_y))
+        else:
+            board.blit(used_list[4], (pos_x, pos_y))
+    else:
+        board.blit(used_list[0], (pos_x, pos_y))
 
 
 def show_posibble_moves(list):

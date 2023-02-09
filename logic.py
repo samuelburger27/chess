@@ -1,8 +1,7 @@
 
 import GUI
 import pygame
-import time
-
+import numpy as np
 
 kicked_pieces = []
 current_turn = 0
@@ -355,12 +354,11 @@ def clear_all_poss_moves():
     global pieces
     for pc in pieces:
         pc.clear_posibble_moves()
+        pc.get_rules_for_current_piece()
 
 
-def find_check():
-    global white_check, black_check
+def find_check(list_of_pieces):
     # find both kings
-    print("Finding check")
     for i in pieces:
         if i.piece == 5:
             if i.color == 0:
@@ -375,18 +373,14 @@ def find_check():
                 for a in pc.posible_moves:
                     if a == white_king.get_current_position():
                         print("White has check !!!")
-                        white_check = True
-                        return True
+                        return 1
             else:
                 for a in pc.posible_moves:
                     if a == black_king.get_current_position():
                         print("Black has check !!!")
-                        black_check = True
-                        return True
+                        return 2
 
-    white_check = False
-    black_check = False
-    return False
+    return 0
 
 
 def update_piece_pos(piece):
@@ -395,8 +389,6 @@ def update_piece_pos(piece):
     if current_turn % 2 == piece.color:
         for lst in piece.posible_moves:
             if lst == find_wanted_destiantion():
-                find_check()
-                clear_all_poss_moves()
                 piece.curr_x = find_wanted_destiantion()[0]
                 piece.curr_y = find_wanted_destiantion()[1]
 
@@ -420,3 +412,26 @@ def is_kicked(pos, rhs):
             if piece.get_current_position() == pos:
                 return piece
     return False
+
+
+def find_possible_moves_for_check(color):
+    # we create new copy of all pieces and their possible moves and run find check() for every possilbe moves
+    # if we find that some move block check mate we put it in new list
+    test_pieces = pieces.copy()
+    moves_that_save_king = []
+    color -= 1
+    for piece in test_pieces:
+        if piece.color == color:
+            for moves in piece.posible_moves:
+                x = piece.curr_x
+                y = piece.curr_y
+
+                piece.curr_x = moves[0]
+                piece.curr_y = moves[1]
+                print("Hell yea")
+                if find_check(test_pieces) == 0:
+                    moves_that_save_king.append([piece.id, moves])
+
+                piece.curr_x = x
+                piece.curr_y = y
+    return moves_that_save_king

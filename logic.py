@@ -1,94 +1,74 @@
-
-import pygame
 import numpy as np
-
-
-class PlayingPiece:
-    """
-      1. pawn
-      2. rook
-      3. knight
-      4. bishop
-      5. queen
-      6. king
-
-      //////////////////
-      0. white
-      1. black
-    """
-
-    def __init__(self, piece, color, id, curr_position):
-        self.piece = piece
-        self.color = color
-        self.curr_x, self.curr_y = curr_position
-        self.id = id
-        self.possible_moves = []
 
 
 def restart_pieces(board: np.ndarray):
     """
-    1-8 white pawns
-    9-16 other white pieces
-    1-29 : white colour
-    30+ : black colour
+    0- empty space
+    1- pawn
+    2- rook(can castle)
+    3- knight
+    4- bishop
+    5- queen
+    6- king (can castle)
+    7- rook(cant castle)
+    8- king(cant castle)
     """
-    # #######################white
     # pawns
     board[6, 0] = [1, 1]
-    board[6, 1] = [2, 1]
-    board[6, 2] = [3, 1]
-    board[6, 3] = [4, 1]
-    board[6, 4] = [5, 1]
-    board[6, 5] = [6, 1]
-    board[6, 6] = [7, 1]
-    board[6, 7] = [8, 1]
+    board[6, 1] = [1, 1]
+    board[6, 2] = [1, 1]
+    board[6, 3] = [1, 1]
+    board[6, 4] = [1, 1]
+    board[6, 5] = [1, 1]
+    board[6, 6] = [1, 1]
+    board[6, 7] = [1, 1]
 
     # rooks
-    board[7, 0] = [9, 2]
-    board[7, 7] = [10, 2]
+    board[7, 0] = [1, 2]
+    board[7, 7] = [1, 2]
 
     # knights
-    board[7, 1] = [11, 3]
-    board[7, 6] = [12, 3]
+    board[7, 1] = [1, 3]
+    board[7, 6] = [1, 3]
 
     # bishops
-    board[7, 2] = [13, 4]
-    board[7, 5] = [14, 4]
+    board[7, 2] = [1, 4]
+    board[7, 5] = [1, 4]
 
     # queen
-    board[7, 3] = [15, 5]
+    board[7, 3] = [1, 5]
 
     # king
-    board[7, 4] = [16, 6]
+    board[7, 4] = [1, 6]
 
     # ################################################### black
     # pawns
-    board[1, 0] = [31, 1]
-    board[1, 1] = [32, 1]
-    board[1, 2] = [33, 1]
-    board[1, 3] = [34, 1]
-    board[1, 4] = [35, 1]
-    board[1, 5] = [36, 1]
-    board[1, 6] = [37, 1]
-    board[1, 7] = [38, 1]
+    board[1, 0] = [2, 1]
+    board[1, 1] = [2, 1]
+    board[1, 2] = [2, 1]
+    board[1, 3] = [2, 1]
+    board[1, 4] = [2, 1]
+    board[1, 5] = [2, 1]
+    board[1, 6] = [2, 1]
+    board[1, 7] = [2, 1]
 
     # rooks
-    board[0, 0] = [39, 2]
-    board[0, 7] = [40, 2]
+    board[0, 0] = [2, 2]
+    board[0, 7] = [2, 2]
 
     # knights
-    board[0, 1] = [41, 3]
-    board[0, 6] = [42, 3]
+    board[0, 1] = [2, 3]
+    board[0, 6] = [2, 3]
 
     # bishops
-    board[0, 2] = [43, 4]
-    board[0, 5] = [44, 4]
+    board[0, 2] = [2, 4]
+    board[0, 5] = [2, 4]
 
     # queen
-    board[0, 3] = [45, 5]
+    board[0, 3] = [2, 5]
 
     # king
-    board[0, 4] = [46, 6]
+    board[0, 4] = [2, 6]
 
     return board
 
@@ -96,116 +76,261 @@ def restart_pieces(board: np.ndarray):
 def return_possible_moves(board, piece_index):
     """return all possible moves for piece"""
     y, x = piece_index
-
-    piece_id, piece_name = board[y, x]
+    colour, id = board[y, x]
     moves = []
-    def get_colour():
-        # if white
-        if piece_id < 30:
-            return True
-        return False
-    #TODO other pieces
-    #TODO chcek colors of the pawns
-    # pawn
-    if piece_name == 1:
-        if get_colour():
-            direction = y-1
+    castle = 0
+
+    def blank():
+        # blank space
+        pass
+
+    def pawn():
+        # white
+        if colour == 1:
+            direction = y - 1
+            start_pos = 6
+            start_move = y - 2
+        # black
         else:
-            direction = y+1
+            direction = y + 1
+            start_pos = 1
+            start_move = y + 2
+
         if x < 7:
-            if (board[direction, x+1] != np.zeros(2)).all():
-                moves.append((direction, x+1))
+            if board[direction, x + 1, 0] != colour and board[direction, x + 1, 0] != 0:
+                moves.append((direction, x + 1))
         if x > 0:
-            if (board[direction, x-1, 0] != np.zeros(2)).all():
-                moves.append((direction, x-1))
+            if board[direction, x - 1, 0] != colour and board[direction, x - 1, 0] != 0:
+                moves.append((direction, x - 1))
         if (board[direction, x] == np.zeros(2)).all():
             moves.append((direction, x))
+            if y == start_pos and (board[start_move, x] == np.zeros(2)).all():
+                moves.append((start_move, x))
 
     # rook
-    elif piece_name == 2:
-        pass
-    # knight
-    elif piece_name == 3:
-        pass
-    # bishop
-    elif piece_name == 4:
-        pass
-    # queen
-    elif piece_name == 5:
-        pass
-    # king
-    else:
-        pass
+    def rook():
+        # add all moves in 4 direction until hit your or enemy piece
+        y_pos_stop = 0
+        y_neg_stop = 0
+        x_pos_stop = 0
+        x_neg_stop = 0
+        for i in range(1, 8):
+            if y + i <= 7 and not y_pos_stop:
+                if board[y + i, x, 0] != colour:
+                    moves.append((y + i, x))
+                    # if enemy piece
+                    if board[y + i, x, 0] != 0:
+                        y_pos_stop = 1
+                # no piece
+                else:
+                    y_pos_stop = 1
+            if y - i >= 0 and not y_neg_stop:
+                if board[y - i, x, 0] != colour:
+                    moves.append((y - i, x))
+                    if board[y - i, x, 0] != 0:
+                        y_neg_stop = 1
+                else:
+                    y_neg_stop = 1
+            if x + i <= 7 and not x_pos_stop:
+                if board[y, x + i, 0] != colour:
+                    moves.append((y, x + i))
+                    if board[y, x + i, 0] != 0:
+                        x_pos_stop = 1
+                else:
+                    x_pos_stop = 1
+            if x - i >= 0 and not x_neg_stop:
+                if board[y, x - i, 0] != colour:
+                    moves.append((y, x - i))
+                    if board[y, x - i, 0] != 0:
+                        x_neg_stop = 1
+                else:
+                    x_neg_stop = 1
 
+    # knight
+    def knight():
+        """check all 8 possible knight moves"""
+        if y + 2 < 8:
+            if x + 1 < 8:
+                if board[y + 2, x + 1, 0] != colour:
+                    moves.append((y + 2, x + 1))
+            if x - 1 >= 0:
+                if board[y + 2, x - 1, 0] != colour:
+                    moves.append((y + 2, x - 1))
+
+        if y - 2 >= 0:
+            if x + 1 < 8:
+                if board[y - 2, x + 1, 0] != colour:
+                    moves.append((y - 2, x + 1))
+            if x - 1 >= 0:
+                if board[y - 2, x - 1, 0] != colour:
+                    moves.append((y - 2, x - 1))
+
+        if x + 2 < 8:
+            if y + 1 < 8:
+                if board[y + 1, x + 2, 0] != colour:
+                    moves.append((y + 1, x + 2))
+            if y - 1 >= 0:
+                if board[y - 1, x + 2, 0] != colour:
+                    moves.append((y - 1, x + 2))
+
+        if x - 2 >= 0:
+            if y + 1 < 8:
+                if board[y + 1, x - 2, 0] != colour:
+                    moves.append((y + 1, x - 2))
+            if y - 1 >= 0:
+                if board[y - 1, x - 2, 0] != colour:
+                    moves.append((y - 1, x - 2))
+
+    # bishop
+    def bishop():
+        y_p_x_p = 0
+        y_n_x_p = 0
+        y_p_x_n = 0
+        y_n_x_n = 0
+        for i in range(1, 8):
+            if y + i <= 7 and x + i <= 7 and not y_p_x_p:
+                if board[y + i, x + i, 0] != colour:
+                    moves.append((y + i, x + i))
+                    # if enemy piece
+                    if board[y + i, x + i, 0] != 0:
+                        y_p_x_p = 1
+                # no piece
+                else:
+                    y_p_x_p = 1
+            if y - i >= 0 and x + i <= 7 and not y_n_x_p:
+                if board[y - i, x + i, 0] != colour:
+                    moves.append((y - i, x + i))
+
+                    if board[y - i, x + i, 0] != 0:
+                        y_n_x_p = 1
+                else:
+                    y_n_x_p = 1
+            if y + i <= 7 and x - i >= 0 and not y_p_x_n:
+                if board[y + i, x - i, 0] != colour:
+                    moves.append((y + i, x - i))
+
+                    if board[y + i, x - i, 0] != 0:
+                        y_p_x_n = 1
+                else:
+                    y_p_x_n = 1
+            if y - i >= 0 and x - i >= 0 and not y_n_x_n:
+                if board[y - i, x - i, 0] != colour:
+                    moves.append((y - i, x - i))
+
+                    if board[y - i, x - i, 0] != 0:
+                        y_n_x_n = 1
+                else:
+                    y_n_x_n = 1
+
+    # queen
+    def queen():
+        rook()
+        bishop()
+
+    def king():
+        # castle
+        if id == 6:
+            # queen side
+            # if space between king and rook is clear
+            if (board[y, 1:3] == np.zeros(2)).all():
+                moves.append((y, 2))
+            # king side
+            if (board[y, 5:6] == np.zeros(2)).all():
+                moves.append((y, 6))
+
+        if y + 1 <= 7:
+            if x + 1 <= 7:
+                if board[y + 1, x + 1, 0] != colour:
+                    moves.append((y + 1, x + 1))
+            if x - 1 >= 0:
+                if board[y + 1, x - 1, 0] != colour:
+                    moves.append((y + 1, x - 1))
+            if board[y + 1, x, 0] != colour:
+                moves.append((y + 1, x))
+        if y - 1 >= 0:
+            if x + 1 <= 7:
+                if board[y - 1, x + 1, 0] != colour:
+                    moves.append((y - 1, x + 1))
+            if x - 1 >= 0:
+                if board[y - 1, x - 1, 0] != colour:
+                    moves.append((y - 1, x - 1))
+            if board[y - 1, x, 0] != colour:
+                moves.append((y - 1, x))
+        if x + 1 <= 7:
+            if board[y, x + 1, 0] != colour:
+                moves.append((y, x + 1))
+        if x - 1 >= 0:
+            if board[y, x - 1, 0] != colour:
+                moves.append((y, x - 1))
+
+    list_of_func = [blank, pawn, rook, knight, bishop, queen, king, rook, king]
+    list_of_func[id]()
     return moves
 
-# !!!possibly not needed
-def return_all_possible_moves(board: np.ndarray, turn: int):
-    playing_pieces = np.reshape(board[:, :, 0], (8, 8))
+def get_all_moves(board: np.ndarray, turn: int, get_list=False):
     all_moves = {}
-    if turn == 0:
-        # get white pieces
-        playing_pieces = np.nonzero(0 < playing_pieces < 30)
-    else:
-        playing_pieces = np.nonzero(playing_pieces > 30)
-    # TODO add check checker XD
+    list_of_moves = []
+    a = board[:, :, 0]
+    playing_pieces = np.nonzero(a == turn)
     for y, x in zip(playing_pieces[0], playing_pieces[1]):
-        all_moves[playing_pieces[y][x]] = return_possible_moves(board, (y, x))
-
-    return all_moves
-
-def find_check(list_of_pieces):
-    # find both kings
-    for i in pieces:
-        if i.piece == 5:
-            if i.color == 0:
-                white_king = i
-            else:
-                black_king = i
-
-    # check if any posiblle move is attacking king
-    for pc in pieces:
-        if pc.id != white_king and pc.id != black_king:
-            if pc.color != white_king.color:
-                for a in pc.possible_moves:
-                    if a == white_king.get_current_position():
-                        print("White has check !!!")
-                        return 1
-            else:
-                for a in pc.possible_moves:
-                    if a == black_king.get_current_position():
-                        print("Black has check !!!")
-                        return 2
-
-    return 0
+        all_moves[(y, x)] = return_possible_moves(board, (y, x))
+        list_of_moves.extend(return_possible_moves(board, (y, x)))
+    if not get_list:
+        return all_moves
+    return list_of_moves
 
 
-def is_kicked(pos, rhs):
-    for piece in pieces:
-        if piece.id != rhs.id and piece.color != rhs.color:
-            if piece.get_current_position() == pos:
-                return piece
+def check(board, turn):
+    a = board[:, :, 1]
+    pos = None
+    # get position of all kings(both colors, both id)
+    k_pos = np.transpose(np.concatenate((np.nonzero(a == 8), np.nonzero(a == 6)), axis=1))
+    for y, x in k_pos:
+        if board[y, x, 0] != turn:
+            pos = tuple((y, x))
+            break
+    if pos in get_all_moves(board, turn, True):
+        return True
     return False
 
 
-def find_possible_moves_for_check(color):
-    # we create new copy of all pieces and their possible moves and run find check() for every possilbe moves
-    # if we find that some move block check mate we put it in new list
-    test_pieces = pieces.copy()
-    moves_that_save_king = []
-    color -= 1
-    for piece in test_pieces:
-        if piece.color == color:
-            for moves in piece.possible_moves:
-                x = piece.curr_x
-                y = piece.curr_y
+def update_pos(board, last_pos, wanted_pos, turn):
+    wanted_y, wanted_x = wanted_pos
+    last_y, last_x = last_pos
 
-                piece.curr_x = moves[0]
-                piece.curr_y = moves[1]
-                print("Hell yea")
-                if find_check(test_pieces) == 0:
-                    moves_that_save_king.append([piece.id, moves])
+    # check castling
+    if board[last_y, last_x, 1] == 6:
+        # king side
+        if wanted_x - last_x == 2:
+            board[wanted_y, last_x + 1] = board[wanted_y, 7]
+            board[wanted_y, last_x + 2] = board[last_y, last_x]
+            board[last_y, last_x], board[wanted_y, 7] = np.zeros(2)
+        # queen side
+        elif wanted_x - last_x == -2:
+            board[wanted_y, last_x - 1] = board[wanted_y, 0]
+            board[wanted_y, last_x - 2] = board[last_y, last_x]
+            board[last_y, last_x], board[wanted_y, 0] = np.zeros(2)
 
-                piece.curr_x = x
-                piece.curr_y = y
-    return moves_that_save_king
+    else:
+        board[wanted_y, wanted_x] = board[last_y, last_x]
+        board[last_y, last_x] = np.zeros(2)
+    # if king or rook moved change id to non castleble ones
+    if board[wanted_y, wanted_x, 1] == 2:
+        board[wanted_y, wanted_x, 1] = 7
+    elif board[wanted_y, wanted_x, 1] == 6:
+        board[wanted_y, wanted_x, 1] = 8
+
+    ch = check(board, turn)
+    print(ch)
+    return board, ch
+
+
+def block_check_moves(board, turn):
+    # TODO castle possibility
+    dic = get_all_moves(board, turn)
+    for piece, moves in dic.items():
+        for pos in moves:
+            if update_pos(board, piece, pos, turn)[1]:
+                pass
+        pass
+    pass

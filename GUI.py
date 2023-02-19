@@ -72,13 +72,15 @@ def blit_pieces(board: np.ndarray):
             display.blit(black_img[piece[1]-1], (piece_x, piece_y))
 
 
-def get_moves(board, turn):
+def get_moves(board, turn, check):
     mouse_x, mouse_y = pygame.mouse.get_pos()
-    x = ((mouse_x-82)//80)
-    y = ((mouse_y-84)//80)
-    if turn == board[y, x, 0]:
-        moves = logic.return_possible_moves(board, (y, x))
-        return moves, (y, x)
+    curr_pos = (((mouse_y-84)//80), ((mouse_x-82)//80))
+    if curr_pos[0] < 8 and curr_pos[1] < 8:
+        if turn == board[curr_pos[0], curr_pos[1], 0]:
+            moves = logic.return_possible_moves(board, curr_pos, turn)
+            if check:
+                moves = logic.block_check_moves(board, curr_pos, moves, turn)
+            return moves, curr_pos
 
 
 def blit_possible_moves(shown_moves):
@@ -96,11 +98,11 @@ def update_position(board, shown_moves, turn):
         if wanted_pos in list(shown_moves.values())[0]:
             last_pos = list(shown_moves.keys())[0]
             return logic.update_pos(board, last_pos, wanted_pos, turn)
-    return None, 0
+    return None
 
 
 def blit_gui(board: np.ndarray, shown_moves):
     display.blit(bg, (0, 0))
+    blit_pieces(board)
     if shown_moves:
         blit_possible_moves(shown_moves)
-    blit_pieces(board)

@@ -7,7 +7,8 @@ import logic
 if __name__ == '__main__':
     # TODO add turns - done
     # TODO add pawn promotion
-    # TODO add check detection and show only moves which will block check
+    # TODO add check detection and show only moves which will block check - done
+    # TODO not allow moves which will put player in check
     # TODO add check mate
     # TODO add drag functionality
     run = True
@@ -23,7 +24,7 @@ if __name__ == '__main__':
             if event.type == pygame.QUIT:
                 run = False
             if event.type == pygame.MOUSEBUTTONUP:
-                pos, check = GUI.update_position(board, shown_moves, turn)
+                pos = GUI.update_position(board, shown_moves, turn)
                 if pos is not None:
                     board = pos
                     shown_moves = {}
@@ -31,13 +32,13 @@ if __name__ == '__main__':
                         turn = 2
                     else:
                         turn = 1
+                    check = logic.check(board, turn)
+                    if check:
+                        logic.game_over(board, turn)
                 else:
-                    if GUI.get_moves(board, turn):
-                        moves, cords = GUI.get_moves(board, turn)
+                    if GUI.get_moves(board, turn, check):
+                        moves, cords = GUI.get_moves(board, turn, check)
                         shown_moves = {cords: moves}
-                if check:
-                    pass
-                    # logic.block_check_moves(board, turn)
         pygame.display.update()
 
     pygame.quit()

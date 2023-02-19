@@ -73,7 +73,7 @@ def restart_pieces(board: np.ndarray):
     return board
 
 
-def return_possible_moves(board, piece_index):
+def piece_moves(board, piece_index):
     """return all possible moves for piece"""
     y, x = piece_index
     colour, id = board[y, x]
@@ -267,29 +267,70 @@ def return_possible_moves(board, piece_index):
     list_of_func[id]()
     return moves
 
+
+def block_check_moves(board, curr_pos, moves, turn):
+    # return moves that will block check
+    blocking_moves = []
+    for pos in moves:
+        b = np.copy(board)
+        new_b = update_pos(b, curr_pos, pos, turn)
+        # if not check
+        if not check(new_b, turn):
+            blocking_moves.append(pos)
+    return blocking_moves
+
+
+def return_possible_moves(board, piece_index, turn):
+    b = board.copy()
+    moves = piece_moves(b, piece_index)
+    moves = block_check_moves(board, piece_index, moves, turn)
+    return moves
+
+
+def get_all_future_moves(board: np.ndarray, turn: int, get_list=False):
+    # used only when finding checks, so we dont get recursion
+    all_moves = {}
+    list_of_moves = []
+    a = board[:, :, 0]
+    playing_pieces = np.nonzero(a == turn)
+    for y, x in zip(playing_pieces[0], playing_pieces[1]):
+        all_moves[(y, x)] = piece_moves(board, (y, x))
+        list_of_moves.extend(piece_moves(board, (y, x)))
+    if not get_list:
+        return all_moves
+    return list_of_moves
+
+
 def get_all_moves(board: np.ndarray, turn: int, get_list=False):
     all_moves = {}
     list_of_moves = []
     a = board[:, :, 0]
     playing_pieces = np.nonzero(a == turn)
     for y, x in zip(playing_pieces[0], playing_pieces[1]):
-        all_moves[(y, x)] = return_possible_moves(board, (y, x))
-        list_of_moves.extend(return_possible_moves(board, (y, x)))
+        all_moves[(y, x)] = return_possible_moves(board, (y, x), turn)
+        list_of_moves.extend(return_possible_moves(board, (y, x), turn))
     if not get_list:
         return all_moves
     return list_of_moves
 
 
-def check(board, turn):
+def check(board, turn, moves=None):
     a = board[:, :, 1]
     pos = None
+    if turn == 1:
+        op_turn = 2
+    else:
+        op_turn = 1
+    if not moves:
+        moves = get_all_future_moves(board, op_turn, True)
+
     # get position of all kings(both colors, both id)
     k_pos = np.transpose(np.concatenate((np.nonzero(a == 8), np.nonzero(a == 6)), axis=1))
     for y, x in k_pos:
-        if board[y, x, 0] != turn:
+        if board[y, x, 0] == turn:
             pos = tuple((y, x))
             break
-    if pos in get_all_moves(board, turn, True):
+    if pos in moves:
         return True
     return False
 
@@ -310,27 +351,24 @@ def update_pos(board, last_pos, wanted_pos, turn):
             board[wanted_y, last_x - 1] = board[wanted_y, 0]
             board[wanted_y, last_x - 2] = board[last_y, last_x]
             board[last_y, last_x], board[wanted_y, 0] = np.zeros(2)
-
+        else:
+            board[wanted_y, wanted_x] = board[last_y, last_x]
+            board[last_y, last_x] = np.zeros(2)
+            # change king id to non castle
+            board[wanted_y, wanted_x, 1] = 8
     else:
         board[wanted_y, wanted_x] = board[last_y, last_x]
         board[last_y, last_x] = np.zeros(2)
-    # if king or rook moved change id to non castleble ones
-    if board[wanted_y, wanted_x, 1] == 2:
-        board[wanted_y, wanted_x, 1] = 7
-    elif board[wanted_y, wanted_x, 1] == 6:
-        board[wanted_y, wanted_x, 1] = 8
+        # if rook moved change id to non castle
+        if board[wanted_y, wanted_x, 1] == 2:
+            board[wanted_y, wanted_x, 1] = 7
 
-    ch = check(board, turn)
-    print(ch)
-    return board, ch
+    return board
 
 
-def block_check_moves(board, turn):
-    # TODO castle possibility
-    dic = get_all_moves(board, turn)
-    for piece, moves in dic.items():
-        for pos in moves:
-            if update_pos(board, piece, pos, turn)[1]:
-                pass
-        pass
-    pass
+def game_over(board, turn):
+    all_moves = get_all_moves(board, turn)
+    for curr_pos, moves in all_moves.items():
+        if block_check_moves(board, curr_pos, moves, turn):
+            return False
+    return True

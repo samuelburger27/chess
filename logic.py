@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def restart_pieces(board: np.ndarray):
+def restart_pieces():
     """
     0- empty space
     1- pawn
@@ -13,6 +13,7 @@ def restart_pieces(board: np.ndarray):
     7- rook(cant castle)
     8- king(cant castle)
     """
+    board = np.zeros((8, 8, 2)).astype(int)
     # pawns
     board[6, 0] = [1, 1]
     board[6, 1] = [1, 1]
@@ -335,10 +336,9 @@ def check(board, turn, moves=None):
     return False
 
 
-def update_pos(board, last_pos, wanted_pos, turn):
-    wanted_y, wanted_x = wanted_pos
-    last_y, last_x = last_pos
-
+def update_pos(board, last_y_x, wanted_y_x, turn):
+    wanted_y, wanted_x = wanted_y_x
+    last_y, last_x = last_y_x
     # check castling
     if board[last_y, last_x, 1] == 6:
         # king side
@@ -362,6 +362,10 @@ def update_pos(board, last_pos, wanted_pos, turn):
         # if rook moved change id to non castle
         if board[wanted_y, wanted_x, 1] == 2:
             board[wanted_y, wanted_x, 1] = 7
+        # pawn promotion
+        # if pawn on promotion rank
+        elif board[wanted_y, wanted_x, 1] == 1 and wanted_y == (0 if turn == 1 else 7):
+            board[wanted_y, wanted_x, 1] = 5
 
     return board
 

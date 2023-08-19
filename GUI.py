@@ -120,6 +120,18 @@ def blit_check(board, turn, checkmate):
         display.blit(txt, (770, 100))
 
 
+def blit_modes(board, current_mode):
+    modes = ['Player vs player on one computer', 'Player vs computer(TODO)', 'Play online']
+    title = font.render('Modes: ', True, (255, 255, 255))
+    pygame.draw.rect(display, (0, 0, 0), (750, 240+(current_mode*60), 500, 60))
+    display.blit(title, (770, 200))
+    display.blit
+    for i in range(len(modes)):
+        modes_rendered = font.render(modes[i], True, (255, 255, 255))
+        display.blit(modes_rendered, (770, 260+(i*60)))
+
+
+
 def update_position(board, shown_moves, turn):
     # if mouse is clicked over legal move piece there, update pos else return None
     mouse_x, mouse_y = pygame.mouse.get_pos()
@@ -148,9 +160,10 @@ def blit_restart_b():
     display.blit(reset_b, (900, 600))
 
 
-def blit_gui(board: np.ndarray, shown_moves, check, checkmate, turn):
+def blit_gui(board: np.ndarray, shown_moves, check, checkmate, turn, current_mode):
     display.blit(bg, (0, 0))
     blit_restart_b()
+    blit_modes(board, current_mode)
     if checkmate:
         blit_checkmate(turn)
     if check:

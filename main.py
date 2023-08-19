@@ -12,6 +12,7 @@ if __name__ == '__main__':
     # TODO add drag functionality
     # TODO add move history
     # TODO wlan playability
+    # TODO add en peasant
     run = True
     # 1- white, 2- black
     turn = 1
@@ -20,7 +21,7 @@ if __name__ == '__main__':
     checkmate = False
     board = logic.restart_pieces()
     while run:
-        GUI.blit_gui(board, shown_moves, check, checkmate, turn)
+        GUI.blit_gui(board, shown_moves, check, checkmate, turn, current_mode=0)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False

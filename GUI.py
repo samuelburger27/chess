@@ -5,51 +5,51 @@ import logic
 
 pygame.init()
 # load images
-bg = pygame.image.load("assets\\board.png")
+bg = pygame.image.load("assets/board.png")
 
-white_img = [pygame.image.load("assets\\pieces\\PawnW.png"),
-             pygame.image.load("assets\\pieces\\RookW.png"),
-             pygame.image.load("assets\\pieces\\KnightW.png"),
-             pygame.image.load("assets\\pieces\\BishopW.png"),
-             pygame.image.load("assets\\pieces\\QueenW.png"),
-             pygame.image.load("assets\\pieces\\KingW.png"),
-             pygame.image.load("assets\\pieces\\RookW.png"),
-             pygame.image.load("assets\\pieces\\KingW.png")
+white_img = [pygame.image.load("assets/pieces/PawnW.png"),
+             pygame.image.load("assets/pieces/RookW.png"),
+             pygame.image.load("assets/pieces/KnightW.png"),
+             pygame.image.load("assets/pieces/BishopW.png"),
+             pygame.image.load("assets/pieces/QueenW.png"),
+             pygame.image.load("assets/pieces/KingW.png"),
+             pygame.image.load("assets/pieces/RookW.png"),
+             pygame.image.load("assets/pieces/KingW.png")
              ]
 
-black_img = [pygame.image.load("assets\\pieces\\PawnB.png"),
-             pygame.image.load("assets\\pieces\\RookB.png"),
-             pygame.image.load("assets\\pieces\\KnightB.png"),
-             pygame.image.load("assets\\pieces\\BishopB.png"),
-             pygame.image.load("assets\\pieces\\QueenB.png"),
-             pygame.image.load("assets\\pieces\\KingB.png"),
-             pygame.image.load("assets\\pieces\\RookB.png"),
-             pygame.image.load("assets\\pieces\\KingB.png")
+black_img = [pygame.image.load("assets/pieces/PawnB.png"),
+             pygame.image.load("assets/pieces/RookB.png"),
+             pygame.image.load("assets/pieces/KnightB.png"),
+             pygame.image.load("assets/pieces/BishopB.png"),
+             pygame.image.load("assets/pieces/QueenB.png"),
+             pygame.image.load("assets/pieces/KingB.png"),
+             pygame.image.load("assets/pieces/RookB.png"),
+             pygame.image.load("assets/pieces/KingB.png")
              ]
 
-white_convert_img = [pygame.image.load("assets\\pawn_transformation_UI\\black_basic.png"),
+white_convert_img = [pygame.image.load("assets/pawn_transformation_UI/black_basic.png"),
                     pygame.image.load(
-                        "assets\\pawn_transformation_UI\\black_bishop.png"),
+                        "assets/pawn_transformation_UI/black_bishop.png"),
                     pygame.image.load(
-                        "assets\\pawn_transformation_UI\\black_knight.png"),
+                        "assets/pawn_transformation_UI/black_knight.png"),
                     pygame.image.load(
-                        "assets\\pawn_transformation_UI\\black_queen.png"),
+                        "assets/pawn_transformation_UI/black_queen.png"),
                     pygame.image.load(
-                        "assets\\pawn_transformation_UI\\black_rook.png"),
+                        "assets/pawn_transformation_UI/black_rook.png"),
                     ]
-black_convert_img = [pygame.image.load("assets\\pawn_transformation_UI\\black_basic.png"),
+black_convert_img = [pygame.image.load("assets/pawn_transformation_UI/black_basic.png"),
                      pygame.image.load(
-                         "assets\\pawn_transformation_UI\\black_bishop.png"),
+                         "assets/pawn_transformation_UI/black_bishop.png"),
                      pygame.image.load(
-                         "assets\\pawn_transformation_UI\\black_knight.png"),
+                         "assets/pawn_transformation_UI/black_knight.png"),
                      pygame.image.load(
-                         "assets\\pawn_transformation_UI\\black_queen.png"),
+                         "assets/pawn_transformation_UI/black_queen.png"),
                      pygame.image.load(
-                         "assets\\pawn_transformation_UI\\black_rook.png"),
+                         "assets/pawn_transformation_UI/black_rook.png"),
                      ]
 
-reset_b = pygame.image.load("assets\\icons\\reset.png")
-font = pygame.font.Font("assets\\fonts\\Anonymous\\Anonymous.ttf", 20)
+reset_b = pygame.image.load("assets/icons/reset.png")
+font = pygame.font.Font("assets/fonts/Anonymous/Anonymous.ttf", 20)
 ##################################################################################
 display = pygame.display.set_mode((1200, 800))
 dont_show_this_piece = None

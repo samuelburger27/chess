@@ -1,437 +1,378 @@
-
-import GUI
-import pygame
 import numpy as np
-
-kicked_pieces = []
-current_turn = 0
-white_check = False
-black_check = False
-
-
-class playing_pieces():
-    """
-    0. pawn
-    1. rook
-    2. knight
-    3. bishop
-    4. queen
-    5. king
-
-    //////////////////
-    0. white
-    1. black
-    """
-
-    def __init__(self, piece, color, id, curr_position):
-        self.piece = piece
-        self.color = color
-        self.curr_x, self.curr_y = curr_position
-        self.id = id
-        self.posible_moves = []
-        self.have_rules = False
-        self.pawn_on_the_end = False
-
-    def is_mouse_over(self, pos):
-        # return true if this piece is clicked
-        x, y = pos
-        grid_x, grid_y = GUI.grid()[self.curr_y][self.curr_x]
-        if (x > grid_x and x < grid_x+80) and (y > grid_y and y < grid_y+80):
-            return True
-        return False
-
-    def find_piece(self, x, y):
-        for pcs in pieces:
-            if pcs.get_current_position() == (x, y):
-                return pcs
-        return False
-
-    def get_current_position(self):
-        return (self.curr_x, self.curr_y)
-
-    def pawn_rules(self):
-        # TOCOMPLETE
-        # prememnu na queen alebo bishup
-        if self.curr_y >= 1 and self.curr_y <= 6:  # check if its the edge of map
-            if self.color == 0:
-                # if its starting position so pawn can move 2 blocks
-                if self.curr_y == 6:
-                    self.posible_moves.append((self.curr_x, self.curr_y-2))
-                self.posible_moves.append((self.curr_x, self.curr_y-1))
-
-                for pcs in pieces:
-                    for compr in self.posible_moves:
-                        if pcs.get_current_position() == compr:
-                            self.posible_moves.pop(
-                                self.posible_moves.index(compr))
-
-                for p in pieces:
-                    if p.color == 1:
-                        x, y = p.get_current_position()
-
-                        if self.get_current_position() == (x+1, y+1):
-                            self.posible_moves.append((x, y))
-                        if self.get_current_position() == (x-1, y+1):
-                            self.posible_moves.append((x, y))
-            else:
-                if self.curr_y == 1:
-                    self.posible_moves.append((self.curr_x, self.curr_y+2))
-                self.posible_moves.append((self.curr_x, self.curr_y+1))
-
-                for pcs in pieces:
-                    for compr in self.posible_moves:
-                        if pcs.get_current_position() == compr:
-                            self.posible_moves.pop(
-                                self.posible_moves.index(compr))
-
-                for p in pieces:
-                    if p.color == 0:
-                        x, y = p.get_current_position()
-                        if self.get_current_position() == (x+1, y-1):
-                            self.posible_moves.append((x, y))
-                        if self.get_current_position() == (x-1, y-1):
-                            self.posible_moves.append((x, y))
-
-    def rook_rules(self):
-        # TODOO make it look better
-        x_plus = False
-        x_minus = False
-        y_plus = False
-        y_minus = False
-
-        # check
-        for i in range(1, 8):
-            if self.curr_x+i < 8:
-                if self.find_piece(self.curr_x+i, self.curr_y) and not x_plus:
-                    x_plus = True
-                    if self.color != self.find_piece((self.curr_x+i), self.curr_y).color:
-                        self.posible_moves.append((self.curr_x+i, self.curr_y))
-                if x_plus != True:
-                    self.posible_moves.append((self.curr_x+i, self.curr_y))
-
-            if self.curr_x-i > -1:
-                if self.find_piece(self.curr_x-i, self.curr_y) and not x_minus:
-                    x_minus = True
-                    if self.color != self.find_piece((self.curr_x-i), self.curr_y).color:
-                        self.posible_moves.append((self.curr_x-i, self.curr_y))
-                if x_minus != True:
-                    self.posible_moves.append((self.curr_x-i, self.curr_y))
-
-            if self.curr_y+i < 8:
-                if self.find_piece(self.curr_x, self.curr_y+i) and not y_plus:
-                    y_plus = True
-                    if self.color != self.find_piece((self.curr_x), self.curr_y+i).color:
-                        self.posible_moves.append((self.curr_x, self.curr_y+i))
-                if y_plus != True:
-                    self.posible_moves.append((self.curr_x, self.curr_y+i))
-            if self.curr_y-i > -1:
-                if self.find_piece(self.curr_x, self.curr_y-i) and not y_minus:
-                    y_minus = True
-                    if self.color != self.find_piece((self.curr_x), self.curr_y-i).color:
-                        self.posible_moves.append((self.curr_x, self.curr_y-i))
-                if y_minus != True:
-                    self.posible_moves.append((self.curr_x, self.curr_y-i))
-
-    def knight_rules(self):
-        # check if any of the posiblle 8 position can be used
-        if (self.curr_x - 1 > -1 and self.curr_x-1 < 8) and (self.curr_y - 2 > -1 and self.curr_y - 2 < 8):
-            if not self.find_piece(self.curr_x-1, self.curr_y-2) or self.find_piece(self.curr_x-1, self.curr_y-2).color != self.color:
-                self.posible_moves.append((self.curr_x-1, self.curr_y-2))
-
-        if (self.curr_x + 1 > -1 and self.curr_x+1 < 8) and (self.curr_y - 2 > -1 and self.curr_y - 2 < 8):
-            if not self.find_piece(self.curr_x+1, self.curr_y-2) or self.find_piece(self.curr_x+1, self.curr_y-2).color != self.color:
-                self.posible_moves.append((self.curr_x+1, self.curr_y-2))
-
-        if (self.curr_x - 1 > -1 and self.curr_x-1 < 8) and (self.curr_y + 2 > -1 and self.curr_y + 2 < 8):
-            if not self.find_piece(self.curr_x-1, self.curr_y+2) or self.find_piece(self.curr_x-1, self.curr_y+2).color != self.color:
-                self.posible_moves.append((self.curr_x-1, self.curr_y+2))
-
-        if (self.curr_x + 1 > -1 and self.curr_x+1 < 8) and (self.curr_y + 2 > -1 and self.curr_y + 2 < 8):
-            if not self.find_piece(self.curr_x+1, self.curr_y+2) or self.find_piece(self.curr_x+1, self.curr_y+2).color != self.color:
-                self.posible_moves.append((self.curr_x+1, self.curr_y+2))
-
-        if (self.curr_x - 2 > -1 and self.curr_x-2 < 8) and (self.curr_y - 1 > -1 and self.curr_y - 1 < 8):
-            if not self.find_piece(self.curr_x-2, self.curr_y-1) or self.find_piece(self.curr_x-2, self.curr_y-1).color != self.color:
-                self.posible_moves.append((self.curr_x-2, self.curr_y-1))
-
-        if (self.curr_x + 2 > -1 and self.curr_x+2 < 8) and (self.curr_y - 1 > -1 and self.curr_y - 1 < 8):
-            if not self.find_piece(self.curr_x+2, self.curr_y-1) or self.find_piece(self.curr_x+2, self.curr_y-1).color != self.color:
-                self.posible_moves.append((self.curr_x+2, self.curr_y-1))
-
-        if (self.curr_x - 2 > -1 and self.curr_x-2 < 8) and (self.curr_y + 1 > -1 and self.curr_y + 1 < 8):
-            if not self.find_piece(self.curr_x-2, self.curr_y+1) or self.find_piece(self.curr_x-2, self.curr_y+1).color != self.color:
-                self.posible_moves.append((self.curr_x-2, self.curr_y+1))
-
-        if (self.curr_x + 2 > -1 and self.curr_x+2 < 8) and (self.curr_y + 1 > -1 and self.curr_y + 1 < 8):
-            if not self.find_piece(self.curr_x+2, self.curr_y+1) or self.find_piece(self.curr_x+2, self.curr_y+1).color != self.color:
-                self.posible_moves.append((self.curr_x+2, self.curr_y+1))
-
-    def bishop_rules(self):
-        var1 = False
-        var2 = False
-        var3 = False
-        var4 = False
-        for i in range(1, 8):
-            if (self.curr_x+i > -1 and self.curr_x+i < 8) and (self.curr_y+i > -1 and self.curr_y+i < 8):
-                if self.find_piece(self.curr_x+i, self.curr_y+i) != False and var1 == False:
-                    if self.color != self.find_piece(self.curr_x+i, self.curr_y+i).color:
-                        self.posible_moves.append(
-                            (self.curr_x+i, self.curr_y+i))
-                    var1 = True
-                elif not var1:
-                    self.posible_moves.append((self.curr_x+i, self.curr_y+i))
-
-            if (self.curr_x-i > -1 and self.curr_x-i < 8) and (self.curr_y-i > -1 and self.curr_y-i < 8):
-                if self.find_piece(self.curr_x-i, self.curr_y-i) != False and var2 == False:
-                    if self.color != self.find_piece(self.curr_x-i, self.curr_y-i).color:
-                        self.posible_moves.append(
-                            (self.curr_x-i, self.curr_y-i))
-                    var2 = True
-                elif not var2:
-                    self.posible_moves.append((self.curr_x-i, self.curr_y-i))
-
-            if (self.curr_x+i > -1 and self.curr_x+i < 8) and (self.curr_y-i > -1 and self.curr_y-i < 8):
-                if self.find_piece(self.curr_x+i, self.curr_y-i) != False and var3 == False:
-                    if self.color != self.find_piece(self.curr_x+i, self.curr_y-i).color:
-                        self.posible_moves.append(
-                            (self.curr_x+i, self.curr_y-i))
-                    var3 = True
-                elif not var3:
-                    self.posible_moves.append((self.curr_x+i, self.curr_y-i))
-
-            if (self.curr_x-i > -1 and self.curr_x-i < 8) and (self.curr_y+i > -1 and self.curr_y+i < 8):
-                if self.find_piece(self.curr_x-i, self.curr_y+i) != False and var4 == False:
-                    if self.color != self.find_piece(self.curr_x-i, self.curr_y+i).color:
-                        self.posible_moves.append(
-                            (self.curr_x-i, self.curr_y+i))
-                    var4 = True
-                elif not var4:
-                    self.posible_moves.append((self.curr_x-i, self.curr_y+i))
-
-    def queen_rules(self):
-        self.rook_rules()
-        self.bishop_rules()
-
-    def king_rules(self):
-        if self.curr_x-1 > -1 and self.curr_y > -1:
-            if not self.find_piece(self.curr_x-1, self.curr_y) or self.color != self.find_piece(self.curr_x-1, self.curr_y).color:
-                self.posible_moves.append((self.curr_x-1, self.curr_y))
-
-        if (self.curr_x+1 > -1 and self.curr_x+1 < 8) and (self.curr_y > -1 and self.curr_y < 8):
-            if not self.find_piece(self.curr_x+1, self.curr_y) or self.color != self.find_piece(self.curr_x+1, self.curr_y).color:
-                self.posible_moves.append((self.curr_x+1, self.curr_y))
-
-        if (self.curr_x > -1 and self.curr_x < 8) and (self.curr_y - 1 > -1 and self.curr_y - 1 < 8):
-            if not self.find_piece(self.curr_x, self.curr_y-1) or self.color != self.find_piece(self.curr_x, self.curr_y-1).color:
-                self.posible_moves.append((self.curr_x, self.curr_y-1))
-
-        if (self.curr_x > -1 and self.curr_x < 8) and (self.curr_y + 1 > -1 and self.curr_y + 1 < 8):
-            if not self.find_piece(self.curr_x, self.curr_y+1) or self.color != self.find_piece(self.curr_x, self.curr_y+1).color:
-                self.posible_moves.append((self.curr_x, self.curr_y+1))
-
-        if self.curr_x-1 > -1 and self.curr_y - 1 > -1:
-            if not self.find_piece(self.curr_x-1, self.curr_y-1) or self.color != self.find_piece(self.curr_x-1, self.curr_y-1).color:
-                self.posible_moves.append((self.curr_x-1, self.curr_y-1))
-
-        if (self.curr_x+1 > -1 and self.curr_x+1 < 8) and (self.curr_y + 1 > -1 and self.curr_y + 1 < 8):
-            if not self.find_piece(self.curr_x+1, self.curr_y+1) or self.color != self.find_piece(self.curr_x+1, self.curr_y+1).color:
-                self.posible_moves.append((self.curr_x+1, self.curr_y+1))
-
-        if (self.curr_x + 1 > -1 and self.curr_x+1 < 8) and (self.curr_y - 1 > -1 and self.curr_y - 1 < 8):
-            if not self.find_piece(self.curr_x+1, self.curr_y-1) or self.color != self.find_piece(self.curr_x+1, self.curr_y-1).color:
-                self.posible_moves.append((self.curr_x+1, self.curr_y-1))
-
-        if (self.curr_x-1 > -1 and self.curr_x - 1 < 8) and (self.curr_y + 1 > -1 and self.curr_y + 1 < 8):
-            if not self.find_piece(self.curr_x-1, self.curr_y+1) or self.color != self.find_piece(self.curr_x-1, self.curr_y+1).color:
-                self.posible_moves.append((self.curr_x-1, self.curr_y+1))
-
-        # CHeck check
-        if self.color == 0 and white_check:
-            pass
-        elif self.color == 1 and black_check:
-            pass
-
-    def find_moves_for_check(self):
-        coptare_list = pieces.copy()
-        if white_check and self.color == 0:
-            for pc in self.posible_moves:
-                pass
-
-    def get_rules_for_current_piece(self):
-        if not self.have_rules:
-            self.have_rules = True
-            if self.piece == 0:
-                self.pawn_rules()
-            elif self.piece == 1:
-                self.rook_rules()
-            elif self.piece == 2:
-                self.knight_rules()
-            elif self.piece == 3:
-                self.bishop_rules()
-            elif self.piece == 4:
-                self.queen_rules()
-            else:
-                self.king_rules()
-        return self.posible_moves
-
-    def clear_posibble_moves(self):
-        self.posible_moves = []
-        self.have_rules = False
 
 
 def restart_pieces():
-    global pieces
-    pieces = [playing_pieces(0, 0, 0, (0, 6)),
-              playing_pieces(0, 0, 1, (1, 6)),
-              playing_pieces(0, 0, 2, (2, 6)),
-              playing_pieces(0, 0, 3, (3, 6)),
-              playing_pieces(0, 0, 4, (4, 6)),
-              playing_pieces(0, 0, 5, (5, 6)),
-              playing_pieces(0, 0, 6, (6, 6)),
-              playing_pieces(0, 0, 7, (7, 6)),
+    """
+    0- empty space
+    1- pawn
+    2- rook(can castle)
+    3- knight
+    4- bishop
+    5- queen
+    6- king (can castle)
+    7- rook(cant castle)
+    8- king(cant castle)
+    """
+    board = np.zeros((8, 8, 2)).astype(int)
+    # pawns
+    board[6, 0] = [1, 1]
+    board[6, 1] = [1, 1]
+    board[6, 2] = [1, 1]
+    board[6, 3] = [1, 1]
+    board[6, 4] = [1, 1]
+    board[6, 5] = [1, 1]
+    board[6, 6] = [1, 1]
+    board[6, 7] = [1, 1]
 
-              playing_pieces(1, 0, 8, (0, 7)),
-              playing_pieces(2, 0, 9, (1, 7)),
-              playing_pieces(3, 0, 10, (2, 7)),
-              playing_pieces(4, 0, 11, (3, 7)),
-              playing_pieces(5, 0, 12, (4, 7)),
-              playing_pieces(3, 0, 13, (5, 7)),
-              playing_pieces(2, 0, 14, (6, 7)),
-              playing_pieces(1, 0, 15, (7, 7)),
+    # rooks
+    board[7, 0] = [1, 2]
+    board[7, 7] = [1, 2]
 
+    # knights
+    board[7, 1] = [1, 3]
+    board[7, 6] = [1, 3]
 
+    # bishops
+    board[7, 2] = [1, 4]
+    board[7, 5] = [1, 4]
 
-              playing_pieces(0, 1, 16, (0, 1)),
-              playing_pieces(0, 1, 17, (1, 1)),
-              playing_pieces(0, 1, 18, (2, 1)),
-              playing_pieces(0, 1, 19, (3, 1)),
-              playing_pieces(0, 1, 20, (4, 1)),
-              playing_pieces(0, 1, 21, (5, 1)),
-              playing_pieces(0, 1, 22, (6, 1)),
-              playing_pieces(0, 1, 23, (7, 1)),
+    # queen
+    board[7, 3] = [1, 5]
 
-              playing_pieces(1, 1, 24, (0, 0)),
-              playing_pieces(2, 1, 25, (1, 0)),
-              playing_pieces(3, 1, 26, (2, 0)),
-              playing_pieces(4, 1, 27, (3, 0)),
-              playing_pieces(5, 1, 28, (4, 0)),
-              playing_pieces(3, 1, 29, (5, 0)),
-              playing_pieces(2, 1, 30, (6, 0)),
-              playing_pieces(1, 1, 31, (7, 0)),
-              ]
+    # king
+    board[7, 4] = [1, 6]
 
+    # ################################################### black
+    # pawns
+    board[1, 0] = [2, 1]
+    board[1, 1] = [2, 1]
+    board[1, 2] = [2, 1]
+    board[1, 3] = [2, 1]
+    board[1, 4] = [2, 1]
+    board[1, 5] = [2, 1]
+    board[1, 6] = [2, 1]
+    board[1, 7] = [2, 1]
 
-def clicked_on_piece(mouse_pos):
-    # find which piece was clicked
-    for pcs in pieces:
-        if pcs.is_mouse_over(mouse_pos):
-            return pcs
+    # rooks
+    board[0, 0] = [2, 2]
+    board[0, 7] = [2, 2]
 
+    # knights
+    board[0, 1] = [2, 3]
+    board[0, 6] = [2, 3]
 
-def find_wanted_destiantion():
-    # find on which positiion in grid the mouse is right now
-    for i in range(8):
-        for j in range(8):
-            grid_x, grid_y = GUI.grid()[i][j]
-            mouse_x, mouse_y = pygame.mouse.get_pos()
+    # bishops
+    board[0, 2] = [2, 4]
+    board[0, 5] = [2, 4]
 
-            if (mouse_x > grid_x and mouse_x < grid_x+80) and (mouse_y > grid_y and mouse_y < grid_y+80):
-                return (j, i)
+    # queen
+    board[0, 3] = [2, 5]
 
+    # king
+    board[0, 4] = [2, 6]
 
-def convert_piece():
-    if GUI.conver_pawn_UI() != None:
-        GUI.show_convert_UI = False
-        for piece in pieces:
-            if piece.curr_y == 0 or piece.curr_y == 7:
-                piece.piece = GUI.conver_pawn_UI()
-                break
-
-        current_turn += 1
-
-
-def clear_all_poss_moves():
-    global pieces
-    for pc in pieces:
-        pc.clear_posibble_moves()
-        pc.get_rules_for_current_piece()
+    return board
 
 
-def find_check(list_of_pieces):
-    # find both kings
-    for i in pieces:
-        if i.piece == 5:
-            if i.color == 0:
-                white_king = i
-            else:
-                black_king = i
+def piece_moves(board, piece_index):
+    """return all possible moves for piece"""
+    y, x = piece_index
+    colour, id = board[y, x]
+    moves = []
+    castle = 0
 
-    # check if any posiblle move is attacking king
-    for pc in pieces:
-        if pc.id != white_king and pc.id != black_king:
-            if pc.color != white_king.color:
-                for a in pc.posible_moves:
-                    if a == white_king.get_current_position():
-                        print("White has check !!!")
-                        return 1
-            else:
-                for a in pc.posible_moves:
-                    if a == black_king.get_current_position():
-                        print("Black has check !!!")
-                        return 2
+    def blank():
+        # blank space
+        pass
 
-    return 0
+    def pawn():
+        # white
+        if colour == 1:
+            direction = y - 1
+            start_pos = 6
+            start_move = y - 2
+        # black
+        else:
+            direction = y + 1
+            start_pos = 1
+            start_move = y + 2
+
+        if x < 7:
+            if board[direction, x + 1, 0] != colour and board[direction, x + 1, 0] != 0:
+                moves.append((direction, x + 1))
+        if x > 0:
+            if board[direction, x - 1, 0] != colour and board[direction, x - 1, 0] != 0:
+                moves.append((direction, x - 1))
+        if (board[direction, x] == np.zeros(2)).all():
+            moves.append((direction, x))
+            if y == start_pos and (board[start_move, x] == np.zeros(2)).all():
+                moves.append((start_move, x))
+
+    # rook
+    def rook():
+        # add all moves in 4 direction until hit your or enemy piece
+        y_pos_stop = 0
+        y_neg_stop = 0
+        x_pos_stop = 0
+        x_neg_stop = 0
+        for i in range(1, 8):
+            if y + i <= 7 and not y_pos_stop:
+                if board[y + i, x, 0] != colour:
+                    moves.append((y + i, x))
+                    # if enemy piece
+                    if board[y + i, x, 0] != 0:
+                        y_pos_stop = 1
+                # no piece
+                else:
+                    y_pos_stop = 1
+            if y - i >= 0 and not y_neg_stop:
+                if board[y - i, x, 0] != colour:
+                    moves.append((y - i, x))
+                    if board[y - i, x, 0] != 0:
+                        y_neg_stop = 1
+                else:
+                    y_neg_stop = 1
+            if x + i <= 7 and not x_pos_stop:
+                if board[y, x + i, 0] != colour:
+                    moves.append((y, x + i))
+                    if board[y, x + i, 0] != 0:
+                        x_pos_stop = 1
+                else:
+                    x_pos_stop = 1
+            if x - i >= 0 and not x_neg_stop:
+                if board[y, x - i, 0] != colour:
+                    moves.append((y, x - i))
+                    if board[y, x - i, 0] != 0:
+                        x_neg_stop = 1
+                else:
+                    x_neg_stop = 1
+
+    # knight
+    def knight():
+        """check all 8 possible knight moves"""
+        if y + 2 < 8:
+            if x + 1 < 8:
+                if board[y + 2, x + 1, 0] != colour:
+                    moves.append((y + 2, x + 1))
+            if x - 1 >= 0:
+                if board[y + 2, x - 1, 0] != colour:
+                    moves.append((y + 2, x - 1))
+
+        if y - 2 >= 0:
+            if x + 1 < 8:
+                if board[y - 2, x + 1, 0] != colour:
+                    moves.append((y - 2, x + 1))
+            if x - 1 >= 0:
+                if board[y - 2, x - 1, 0] != colour:
+                    moves.append((y - 2, x - 1))
+
+        if x + 2 < 8:
+            if y + 1 < 8:
+                if board[y + 1, x + 2, 0] != colour:
+                    moves.append((y + 1, x + 2))
+            if y - 1 >= 0:
+                if board[y - 1, x + 2, 0] != colour:
+                    moves.append((y - 1, x + 2))
+
+        if x - 2 >= 0:
+            if y + 1 < 8:
+                if board[y + 1, x - 2, 0] != colour:
+                    moves.append((y + 1, x - 2))
+            if y - 1 >= 0:
+                if board[y - 1, x - 2, 0] != colour:
+                    moves.append((y - 1, x - 2))
+
+    # bishop
+    def bishop():
+        y_p_x_p = 0
+        y_n_x_p = 0
+        y_p_x_n = 0
+        y_n_x_n = 0
+        for i in range(1, 8):
+            if y + i <= 7 and x + i <= 7 and not y_p_x_p:
+                if board[y + i, x + i, 0] != colour:
+                    moves.append((y + i, x + i))
+                    # if enemy piece
+                    if board[y + i, x + i, 0] != 0:
+                        y_p_x_p = 1
+                # no piece
+                else:
+                    y_p_x_p = 1
+            if y - i >= 0 and x + i <= 7 and not y_n_x_p:
+                if board[y - i, x + i, 0] != colour:
+                    moves.append((y - i, x + i))
+
+                    if board[y - i, x + i, 0] != 0:
+                        y_n_x_p = 1
+                else:
+                    y_n_x_p = 1
+            if y + i <= 7 and x - i >= 0 and not y_p_x_n:
+                if board[y + i, x - i, 0] != colour:
+                    moves.append((y + i, x - i))
+
+                    if board[y + i, x - i, 0] != 0:
+                        y_p_x_n = 1
+                else:
+                    y_p_x_n = 1
+            if y - i >= 0 and x - i >= 0 and not y_n_x_n:
+                if board[y - i, x - i, 0] != colour:
+                    moves.append((y - i, x - i))
+
+                    if board[y - i, x - i, 0] != 0:
+                        y_n_x_n = 1
+                else:
+                    y_n_x_n = 1
+
+    # queen
+    def queen():
+        rook()
+        bishop()
+
+    def king():
+        # castle
+        if id == 6:
+            # queen side
+            # if space between king and rook is clear
+            if (board[y, 1:3] == np.zeros(2)).all():
+                moves.append((y, 2))
+            # king side
+            if (board[y, 5:6] == np.zeros(2)).all():
+                moves.append((y, 6))
+
+        if y + 1 <= 7:
+            if x + 1 <= 7:
+                if board[y + 1, x + 1, 0] != colour:
+                    moves.append((y + 1, x + 1))
+            if x - 1 >= 0:
+                if board[y + 1, x - 1, 0] != colour:
+                    moves.append((y + 1, x - 1))
+            if board[y + 1, x, 0] != colour:
+                moves.append((y + 1, x))
+        if y - 1 >= 0:
+            if x + 1 <= 7:
+                if board[y - 1, x + 1, 0] != colour:
+                    moves.append((y - 1, x + 1))
+            if x - 1 >= 0:
+                if board[y - 1, x - 1, 0] != colour:
+                    moves.append((y - 1, x - 1))
+            if board[y - 1, x, 0] != colour:
+                moves.append((y - 1, x))
+        if x + 1 <= 7:
+            if board[y, x + 1, 0] != colour:
+                moves.append((y, x + 1))
+        if x - 1 >= 0:
+            if board[y, x - 1, 0] != colour:
+                moves.append((y, x - 1))
+
+    list_of_func = [blank, pawn, rook, knight, bishop, queen, king, rook, king]
+    list_of_func[id]()
+    return moves
 
 
-def update_piece_pos(piece):
-    global current_turn, pieces
-    # check if its correct turn to go for the color
-    if current_turn % 2 == piece.color:
-        for lst in piece.posible_moves:
-            if lst == find_wanted_destiantion():
-                piece.curr_x = find_wanted_destiantion()[0]
-                piece.curr_y = find_wanted_destiantion()[1]
-
-                if is_kicked(find_wanted_destiantion(), piece):
-                    # if we found pieces with same position kick bottom piece
-                    #  and move it into kicked_pieces list
-                    kicked_pieces.append(pieces.pop(
-                        pieces.index(is_kicked(find_wanted_destiantion(), piece))))
-                if piece.piece == 0 and (piece.curr_y == 0 or piece.curr_y == 7):
-                    print("TRUE")
-                    GUI.show_convert_UI = True
-                    break
-
-                current_turn += 1
-                break
+def block_check_moves(board, curr_pos, moves, turn):
+    # return moves that will block check
+    blocking_moves = []
+    for pos in moves:
+        b = np.copy(board)
+        new_b = update_pos(b, curr_pos, pos, turn)
+        # if not check
+        if not check(new_b, turn):
+            blocking_moves.append(pos)
+    return blocking_moves
 
 
-def is_kicked(pos, rhs):
-    for piece in pieces:
-        if piece.id != rhs.id and piece.color != rhs.color:
-            if piece.get_current_position() == pos:
-                return piece
+def return_possible_moves(board, piece_index, turn):
+    b = board.copy()
+    moves = piece_moves(b, piece_index)
+    moves = block_check_moves(board, piece_index, moves, turn)
+    return moves
+
+
+def get_all_future_moves(board: np.ndarray, turn: int, get_list=False):
+    # used only when finding checks, so we dont get recursion
+    all_moves = {}
+    list_of_moves = []
+    a = board[:, :, 0]
+    playing_pieces = np.nonzero(a == turn)
+    for y, x in zip(playing_pieces[0], playing_pieces[1]):
+        all_moves[(y, x)] = piece_moves(board, (y, x))
+        list_of_moves.extend(piece_moves(board, (y, x)))
+    if not get_list:
+        return all_moves
+    return list_of_moves
+
+
+def get_all_moves(board: np.ndarray, turn: int, get_list=False):
+    all_moves = {}
+    list_of_moves = []
+    a = board[:, :, 0]
+    playing_pieces = np.nonzero(a == turn)
+    for y, x in zip(playing_pieces[0], playing_pieces[1]):
+        all_moves[(y, x)] = return_possible_moves(board, (y, x), turn)
+        list_of_moves.extend(return_possible_moves(board, (y, x), turn))
+    if not get_list:
+        return all_moves
+    return list_of_moves
+
+
+def check(board, turn, moves=None):
+    a = board[:, :, 1]
+    pos = None
+    if turn == 1:
+        op_turn = 2
+    else:
+        op_turn = 1
+    if not moves:
+        moves = get_all_future_moves(board, op_turn, True)
+
+    # get position of all kings(both colors, both id)
+    k_pos = np.transpose(np.concatenate((np.nonzero(a == 8), np.nonzero(a == 6)), axis=1))
+    for y, x in k_pos:
+        if board[y, x, 0] == turn:
+            pos = tuple((y, x))
+            break
+    if pos in moves:
+        return True
     return False
 
 
-def find_possible_moves_for_check(color):
-    # we create new copy of all pieces and their possible moves and run find check() for every possilbe moves
-    # if we find that some move block check mate we put it in new list
-    test_pieces = pieces.copy()
-    moves_that_save_king = []
-    color -= 1
-    for piece in test_pieces:
-        if piece.color == color:
-            for moves in piece.posible_moves:
-                x = piece.curr_x
-                y = piece.curr_y
+def update_pos(board, last_y_x, wanted_y_x, turn):
+    wanted_y, wanted_x = wanted_y_x
+    last_y, last_x = last_y_x
+    # check castling
+    if board[last_y, last_x, 1] == 6:
+        # king side
+        if wanted_x - last_x == 2:
+            board[wanted_y, last_x + 1] = board[wanted_y, 7]
+            board[wanted_y, last_x + 2] = board[last_y, last_x]
+            board[last_y, last_x], board[wanted_y, 7] = np.zeros(2)
+        # queen side
+        elif wanted_x - last_x == -2:
+            board[wanted_y, last_x - 1] = board[wanted_y, 0]
+            board[wanted_y, last_x - 2] = board[last_y, last_x]
+            board[last_y, last_x], board[wanted_y, 0] = np.zeros(2)
+        else:
+            board[wanted_y, wanted_x] = board[last_y, last_x]
+            board[last_y, last_x] = np.zeros(2)
+            # change king id to non castle
+            board[wanted_y, wanted_x, 1] = 8
+    else:
+        board[wanted_y, wanted_x] = board[last_y, last_x]
+        board[last_y, last_x] = np.zeros(2)
+        # if rook moved change id to non castle
+        if board[wanted_y, wanted_x, 1] == 2:
+            board[wanted_y, wanted_x, 1] = 7
+        # pawn promotion
+        # if pawn on promotion rank
+        elif board[wanted_y, wanted_x, 1] == 1 and wanted_y == (0 if turn == 1 else 7):
+            board[wanted_y, wanted_x, 1] = 5
 
-                piece.curr_x = moves[0]
-                piece.curr_y = moves[1]
-                print("Hell yea")
-                if find_check(test_pieces) == 0:
-                    moves_that_save_king.append([piece.id, moves])
+    return board
 
-                piece.curr_x = x
-                piece.curr_y = y
-    return moves_that_save_king
+
+def game_over(board, turn):
+    all_moves = get_all_moves(board, turn)
+    for curr_pos, moves in all_moves.items():
+        if block_check_moves(board, curr_pos, moves, turn):
+            return False
+    return True

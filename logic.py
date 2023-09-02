@@ -289,7 +289,7 @@ def return_possible_moves(board, piece_index, turn):
 
 
 def get_all_future_moves(board: np.ndarray, turn: int, get_list=False):
-    # used only when finding checks, so we dont get recursion
+    # used only when finding checks, so we do not get recursion
     all_moves = {}
     list_of_moves = []
     a = board[:, :, 0]
@@ -302,17 +302,14 @@ def get_all_future_moves(board: np.ndarray, turn: int, get_list=False):
     return list_of_moves
 
 
-def get_all_moves(board: np.ndarray, turn: int, get_list=False):
+def get_all_moves(board: np.ndarray, turn: int):
     all_moves = {}
-    list_of_moves = []
     a = board[:, :, 0]
     playing_pieces = np.nonzero(a == turn)
+    
     for y, x in zip(playing_pieces[0], playing_pieces[1]):
         all_moves[(y, x)] = return_possible_moves(board, (y, x), turn)
-        list_of_moves.extend(return_possible_moves(board, (y, x), turn))
-    if not get_list:
-        return all_moves
-    return list_of_moves
+    return all_moves
 
 
 def check(board, turn, moves=None):

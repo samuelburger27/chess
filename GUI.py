@@ -1,6 +1,3 @@
-import time
-
-import numpy as np
 import pygame
 
 import logic
@@ -58,7 +55,7 @@ dont_show_this_piece = None
 show_convert_UI = False
 
 
-def is_over(x, y, width, height):
+def is_over(x: int, y: int, width: int, height: int) -> bool:
     mouse_x, mouse_y = pygame.mouse.get_pos()
     if x < mouse_x < x + width:
         if y < mouse_y < y + height:
@@ -66,63 +63,61 @@ def is_over(x, y, width, height):
     return False
 
 
-def blit_pieces(board: np.ndarray, turn, flip_board):
+def blit_pieces(board: logic.Board, white_turn: bool, flip_board: bool):
     start_x = 82
     start_y = 84
     piece_size = 80
 
-    pieces = np.nonzero(np.reshape(board[:, :, 1], (8, 8)))
-    for y, x in zip(pieces[0], pieces[1]):
-        piece = board[y, x]
-        x = get_index(x, turn, flip_board)
-        y = get_index(y, turn, flip_board)
+    pieces = board.get_all_pieces_pos()
+    for y, x in pieces:
+        piece = board.get_tile(y, x)
+        x = get_index(x, white_turn, flip_board)
+        y = get_index(y, white_turn, flip_board)
         piece_pos = (start_x + (piece_size * x), start_y + (piece_size * y))
         # white piece
-        if piece[0] == 1:
+        if logic.is_white(piece):
             display.blit(white_img[piece[1] - 1], piece_pos)
         # black piece
         else:
             display.blit(black_img[piece[1] - 1], piece_pos)
 
 
-def get_moves(board, turn, check, flip_board):
+def get_moves(board: logic.Board, white_turn: bool, check: bool, flip_board: bool) -> tuple[
+    list[tuple[int, int]], tuple[int, int]]:
     mouse_x, mouse_y = pygame.mouse.get_pos()
-    # if black turn invert
+    # if blackwhite_turn invert
     y, x = (((mouse_y - 84) // 80), ((mouse_x - 82) // 80))
-    curr_pos = (get_index(y, turn, flip_board), get_index(x, turn, flip_board))
-    if curr_pos[0] < 8 and curr_pos[1] < 8:
-        if turn == board[curr_pos[0], curr_pos[1], 0]:
-            moves = logic.return_possible_moves(board, curr_pos, turn)
+    curr_y, curr_x = get_index(y, white_turn, flip_board), get_index(x, white_turn, flip_board)
+    if curr_y < 8 and curr_x < 8:
+        if white_turn != logic.is_white(board.get_tile(curr_y, curr_x)):
+            moves = logic.return_possible_moves(board, (curr_y, curr_x), white_turn)
             if check:
-                moves = logic.block_check_moves(board, curr_pos, moves, turn)
-            return moves, curr_pos
+                moves = logic.get_block_check_moves(board, (curr_y, curr_x), moves, white_turn)
+            return moves, (curr_y, curr_x)
 
 
-def blit_possible_moves(shown_moves, turn, flip_board):
+def blit_possible_moves(shown_moves, white_turn: bool, flip_board: bool) -> None:
     for y, x in list(shown_moves.values())[0]:
-        x = get_index(x, turn, flip_board)
-        y = get_index(y, turn, flip_board)
+        x = get_index(x, white_turn, flip_board)
+        y = get_index(y, white_turn, flip_board)
         pos = (42 + (x + 1) * 80, 45 + ((y + 1) * 80))
         pygame.draw.circle(display, (138, 85, 85), pos, 16)
 
 
-def blit_check(board, turn, checkmate, flip_board):
-    a = board[:, :, 1]
-    k_pos = np.transpose(np.concatenate((np.nonzero(a == 8), np.nonzero(a == 6)), axis=1))
-    for y, x in k_pos:
-        if board[y, x, 0] == turn:
-            x = get_index(x, turn, flip_board)
-            y = get_index(y, turn, flip_board)
-            pos = (2 + ((x + 1) * 80), 6 + ((y + 1) * 80))
-            break
+def blit_check(board: logic.Board, white_turn: bool, checkmate: bool, flip_board: bool) -> None:
+    king_y, king_x = board.get_king_position(white_turn)
+    y = get_index(king_y, white_turn, flip_board)
+    x = get_index(king_x, white_turn, flip_board)
+    pos = (2 + ((x + 1) * 80), 6 + ((y + 1) * 80))
+
     pygame.draw.rect(display, (138, 85, 85), (pos[0], pos[1], 80, 80))
     if not checkmate:
-        color = 'White' if turn == 1 else 'Black'
+        color = 'White' if white_turn else 'Black'
         txt = font.render(f"{color} is in check", True, (255, 255, 255))
         display.blit(txt, (770, 100))
 
 
-def blit_modes(board, current_mode, flip_board):
+def blit_modes(current_mode: int, flip_board: bool) -> None:
     modes = ['Player vs player on one computer', 'Player vs computer(TODO)', 'Play online']
     title = font.render('Modes: ', True, (255, 255, 255))
     # draw rectangle on selected mode
@@ -144,31 +139,29 @@ def blit_modes(board, current_mode, flip_board):
             pygame.draw.rect(display, (255, 255, 255), (1032, 212, 16, 16))
 
 
-def update_position(board, shown_moves, turn, flip_board):
+def update_position(board: logic.Board, shown_moves, white_turn: bool, flip_board: bool):
     # if mouse is clicked over legal move piece there, update pos else return None
     mouse_x, mouse_y = pygame.mouse.get_pos()
     y, x = (mouse_y - 84) // 80, (mouse_x - 82) // 80
-    wanted_pos = (get_index(y, turn, flip_board), get_index(x, turn, flip_board))
+    wanted_pos = (get_index(y, white_turn, flip_board), get_index(x, white_turn, flip_board))
     if shown_moves:
         if wanted_pos in list(shown_moves.values())[0]:
             last_pos = list(shown_moves.keys())[0]
-            return logic.update_pos(board, last_pos, wanted_pos, turn)
+            return logic.update_pos(board, last_pos, wanted_pos, white_turn)
     return None
 
 
-def blit_checkmate(turn):
-    color = 'black' if turn == 1 else 'white'
+def blit_checkmate(white_turn: bool) -> None:
+    color = 'black' if white_turn == 1 else 'white'
     txt = font.render(f"Checkmate, {color} is victorious", True, (255, 255, 255))
     display.blit(txt, (770, 100))
 
 
-def restart_clicked():
-    if is_over(900, 600, 150, 150):
-        return True
-    return False
+def restart_clicked() -> bool:
+    return is_over(900, 600, 150, 150)
 
 
-def modes_clicked():
+def modes_clicked() -> int | None:
     if is_over(780, 240, 300, 180):
         x, y = pygame.mouse.get_pos()
         if y < 320:
@@ -180,31 +173,31 @@ def modes_clicked():
     return None
 
 
-def flip_button_clicked():
-    if is_over(1030, 210, 170,20):
-        return True
-    return False
+def flip_button_clicked() -> bool:
+    return is_over(1030, 210, 170, 20)
 
-def blit_restart_b():
+
+def blit_restart_b() -> None:
     display.blit(reset_b, (900, 600))
 
 
-def blit_gui(board: np.ndarray, shown_moves, check, checkmate, turn, current_mode, flip_board):
+def blit_gui(board: logic.Board, shown_moves, check: bool, checkmate: bool,
+             white_turn: bool, current_mode: int, flip_board: bool) -> None:
     display.blit(bg, (0, 0))
     blit_restart_b()
-    blit_modes(board, current_mode, flip_board)
+    blit_modes(current_mode, flip_board)
     if checkmate:
-        blit_checkmate(turn)
+        blit_checkmate(white_turn)
     if check:
-        blit_check(board, turn, checkmate, flip_board)
-    blit_pieces(board, turn, flip_board)
+        blit_check(board, white_turn, checkmate, flip_board)
+    blit_pieces(board, white_turn, flip_board)
     if shown_moves:
-        blit_possible_moves(shown_moves, turn, flip_board)
+        blit_possible_moves(shown_moves, white_turn, flip_board)
 
 
-def get_index(index, turn, flip_board, max_index=8):
+def get_index(index: int, white_turn: bool, flip_board: bool, max_index=8) -> int:
     # if black move and invert index
-    if flip_board and turn == 2:
+    if flip_board and not white_turn:
         return max_index - index - 1
 
     return index

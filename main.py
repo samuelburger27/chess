@@ -14,16 +14,15 @@ if __name__ == '__main__':
     # TODO wlan playability
     # TODO add en peasant
     run = True
-    # 1- white, 2- black
-    turn = 1
+    white_turn = True
     current_mode = 0
     flip_board = True
     shown_moves = {}
-    check = 0
+    check = False
     checkmate = False
-    board = logic.restart_pieces()
+    board = logic.Board()
     while run:
-        GUI.blit_gui(board, shown_moves, check, checkmate, turn, current_mode, flip_board)
+        GUI.blit_gui(board, shown_moves, check, checkmate, white_turn, current_mode, flip_board)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
@@ -41,26 +40,26 @@ if __name__ == '__main__':
                         flip_board = not flip_board
                 # if clicked on reset butt
                 if GUI.restart_clicked():
-                    board = logic.restart_pieces()
-                    turn = 1
+                    board.restart_board()
+                    white_turn = True
                     shown_moves = {}
                     check = 0
                     checkmate = False
                     pawn_promote = False
                     flip_board = True
                 else:
-                    pos = GUI.update_position(board, shown_moves, turn, flip_board)
+                    pos = GUI.update_position(board, shown_moves, white_turn, flip_board)
                     if pos is not None:
                         board = pos
                         shown_moves = {}
-                        turn = 2 if turn == 1 else 1
-                        check = logic.check(board, turn)
+                        white_turn = not white_turn
+                        check = logic.is_check(board, white_turn)
                         if check:
-                            if logic.game_over(board, turn):
+                            if logic.game_over(board, white_turn):
                                 checkmate = True
                     else:
-                        if GUI.get_moves(board, turn, check, flip_board):
-                            moves, cords = GUI.get_moves(board, turn, check, flip_board)
+                        if GUI.get_moves(board, white_turn, check, flip_board):
+                            moves, cords = GUI.get_moves(board, white_turn, check, flip_board)
                             shown_moves = {cords: moves}
 
         pygame.display.update()

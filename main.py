@@ -17,7 +17,8 @@ if __name__ == '__main__':
     white_turn = True
     current_mode = 0
     flip_board = True
-    shown_moves = {}
+    shown_moves: set[logic.pos] = set()
+    clicked_piece: logic.pos | None = None
     check = False
     checkmate = False
     board = logic.Board()
@@ -30,9 +31,10 @@ if __name__ == '__main__':
                 # TODO
                 pass
             if event.type == pygame.MOUSEBUTTONUP:
+                print(pygame.mouse.get_pos())
                 # if clicked on modes
-                if GUI.modes_clicked() is not None:
-                    current_mode = GUI.modes_clicked()
+                if GUI.is_modes_clicked():
+                    current_mode = GUI.change_modes()
 
                 # if clicked on flip board button
                 if current_mode == 0:
@@ -42,25 +44,26 @@ if __name__ == '__main__':
                 if GUI.restart_clicked():
                     board.restart_board()
                     white_turn = True
-                    shown_moves = {}
-                    check = 0
+                    shown_moves = set()
+                    check = False
                     checkmate = False
                     pawn_promote = False
                     flip_board = True
                 else:
-                    pos = GUI.update_position(board, shown_moves, white_turn, flip_board)
-                    if pos is not None:
-                        board = pos
-                        shown_moves = {}
+                    new_board = GUI.update_position(board, clicked_piece, shown_moves, white_turn, flip_board)
+                    if new_board is not None:
+                        board = new_board
+                        shown_moves = set()
                         white_turn = not white_turn
                         check = logic.is_check(board, white_turn)
                         if check:
                             if logic.game_over(board, white_turn):
                                 checkmate = True
                     else:
-                        if GUI.get_moves(board, white_turn, check, flip_board):
-                            moves, cords = GUI.get_moves(board, white_turn, check, flip_board)
-                            shown_moves = {cords: moves}
+                        clicked_coords = GUI.get_clicked_piece_coordinates(board, white_turn, flip_board)
+                        if clicked_coords is not None:
+                            clicked_piece = clicked_coords
+                            shown_moves = set(logic.return_possible_moves(board, clicked_piece, white_turn))
 
         pygame.display.update()
 

@@ -1,15 +1,17 @@
 import pygame
 
-class button():
-    def __init__(self, color, x, y, width, height, text='',r= 60,img= None):
+
+class Button():
+    def __init__(self, color, x, y, width, height, text='', r=60, img=None):
         self.color = color
         self.x = x
         self.y = y
         self.width = width
         self.height = height
         self.text = text
-        self.r= r
-        self.img= img
+        self.r = r
+        self.img = img
+
     def draw(self, win, outline=None):
         # Call this method to draw the button on the screen
         if outline and self.img is None:
@@ -24,18 +26,17 @@ class button():
             win.blit(text, (
                 self.x + (self.width / 2 - text.get_width() / 2), self.y + (self.height / 2 - text.get_height() / 2)))
         if self.img is not None:
-            win.blit(self.img,(self.x,self.y))
+            win.blit(self.img, (self.x, self.y))
 
-
-    def isOver(self, pos):
+    def is_over(self, pos):
         # Pos is the mouse position or a tuple of (x,y) coordinates
-        if pos[0] > self.x and pos[0] < self.x + self.width:
-            if pos[1] > self.y and pos[1] < self.y + self.height:
+        if self.x < pos[0] < self.x + self.width:
+            if self.y < pos[1] < self.y + self.height:
                 return True
 
         return False
 
-    def isclicked(self):
-        if self.isOver(pygame.mouse.get_pos()):
-            if pygame.mouse.get_pressed()[0]==1:
+    def is_clicked(self):
+        if self.is_over(pygame.mouse.get_pos()):
+            if pygame.mouse.get_pressed()[0] == 1:
                 return True

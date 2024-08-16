@@ -1,4 +1,5 @@
 import copy
+import enum
 
 BLACK_PAWN = 0
 BLACK_ROOK = 1
@@ -26,9 +27,16 @@ class Board:
 
     def __init__(self) -> None:
         self.board = [0 for _ in range(12)]
+        # [ white king side, white queen side, ....]
+        self.castle_rights = [False for _ in range(4)]
+        # use to record enemy double pawn move for en passant
+        self.double_pawn_move: None | pos = None
         self.restart_board()
 
     def restart_board(self) -> None:
+        self.castle_rights = [True for _ in range(4)]
+        self.double_pawn_move = None
+
         self.board[BLACK_PAWN] = 0b0000000011111111000000000000000000000000000000000000000000000000
         self.board[BLACK_ROOK] = 0b1000000100000000000000000000000000000000000000000000000000000000
         self.board[BLACK_KNIGHT] = 0b0100001000000000000000000000000000000000000000000000000000000000
@@ -43,10 +51,10 @@ class Board:
         self.board[WHITE_QUEEN] = 0b00010000
         self.board[WHITE_KING] = 0b00001000
 
-    def get_bit_sum(self, color: int | None = None) -> int:
+    def get_bit_sum(self, color: bool | None = None) -> int:
         result = 0
-        start = WHITE_ROOK if color == 0 else 0
-        end = WHITE_ROOK if color == 1 else 12
+        start = WHITE_PAWN if color is True else 0
+        end = WHITE_PAWN if color is False else 12
         for i in range(start, end):
             result |= self.board[i]
         return result
@@ -54,7 +62,6 @@ class Board:
     def get_bit_index(self, coordinates: pos) -> int:
         y, x = coordinates
         return 63 - (y * 8 + x)
-
 
     def get_coordinates(self, bit_index: int) -> pos:
         y = 7 - (bit_index // 8)
@@ -87,6 +94,25 @@ class Board:
 
         return removed_piece
 
+    def remove_piece(self, cord: pos) -> Tile:
+        y, x = cord
+        piece = self.get_tile(y, x)
+        assert piece is not None
+
+        bit_mask = 1 << self.get_bit_index(cord)
+        self.board[piece] ^= bit_mask
+        return piece
+
+    def change_piece(self, cord: pos, new_piece: Tile) -> None:
+        assert new_piece is not None
+        y, x = cord
+        curr_piece = self.get_tile(y, x)
+        assert curr_piece is not None
+
+        bit_mask = 1 << self.get_bit_index(cord)
+        self.board[curr_piece] ^= bit_mask
+        self.board[new_piece] |= bit_mask
+
     def tile_is_empty(self, y: int, x: int) -> bool:
         return self.get_tile(y, x) is None
 
@@ -113,6 +139,16 @@ class Board:
             if (self.board[king] & bit_mask) != 0:
                 return self.get_coordinates(i)
         assert False
+
+    def can_castle(self, white_turn: bool, king_side: bool) -> bool:
+        index = 0 if white_turn else 2
+        index += 0 if king_side else 1
+        return self.castle_rights[index]
+
+    def remove_castle_right(self, white_turn: bool, king_side: bool) -> None:
+        index = 0 if white_turn else 2
+        index += 0 if king_side else 1
+        self.castle_rights[index] = False
 
 
 def is_white(tile: Tile) -> bool:
@@ -147,7 +183,7 @@ def get_piece_moves(board: Board, piece_cord: pos) -> list[pos]:
                 and is_white(board.get_tile(forward, x + 1)) != piece_is_white):
             moves.append((forward, x + 1))
 
-        if (x > 1 and board.get_tile(forward, x - 1) is not None
+        if (x > 0 and board.get_tile(forward, x - 1) is not None
                 and is_white(board.get_tile(forward, x - 1)) != piece_is_white):
             moves.append((forward, x - 1))
 
@@ -156,6 +192,13 @@ def get_piece_moves(board: Board, piece_cord: pos) -> list[pos]:
             # double starting pawn move
             if y == start_pos and board.get_tile(double_y, x) is None:
                 moves.append((double_y, x))
+
+        # en passant
+        if board.double_pawn_move is not None:
+            if board.double_pawn_move == (y, x - 1):
+                moves.append((forward, x - 1))
+            elif board.double_pawn_move == (y, x + 1):
+                moves.append((forward, x + 1))
 
     def loop_through_directions(directions: list[pos]) -> None:
         for y_add, x_add in directions:
@@ -192,31 +235,24 @@ def get_piece_moves(board: Board, piece_cord: pos) -> list[pos]:
             if curr_tile is None or not is_same_color(curr_tile, piece):
                 moves.append((new_y, new_x))
 
-    # bishop
     def bishop() -> None:
         DIRR = [(-1, -1), (-1, 1), (1, -1), (1, 1)]
         loop_through_directions(DIRR)
 
-    # queen
     def queen() -> None:
         rook()
         bishop()
 
     def king() -> None:
-        # castle
-        # TODO
-        if piece is None:
-            pass
-            # queen_side_empty_tiles = [(y, 1), (y, 2), (y, 3)]
-            # king_side_empty_tiles = [(y, 5), (y, 6)]
-            # # rook is in correct position and can castle
-            # if (board.get_tile(y, 0).piece == CASLTE_ROOK and board.get_tile(y, 0).colour == piece.colour
-            #         and board.range_is_empty(queen_side_empty_tiles)):
-            #     moves.append((y, 2))
-            # # king side
-            # if (board.get_tile(y, 7).piece == CASLTE_ROOK and board.get_tile(y, 7).colour == piece.colour
-            #         and board.range_is_empty(king_side_empty_tiles)):
-            #     moves.append((y, 6))
+        king_side_empty_tiles = [(y, 5), (y, 6)]
+        queen_side_empty_tiles = [(y, 1), (y, 2), (y, 3)]
+
+        # king side castle
+        if board.can_castle(piece_is_white, True) and board.range_is_empty(king_side_empty_tiles):
+            moves.append((y, 6))
+        # queen side
+        if board.can_castle(piece_is_white, False) and board.range_is_empty(queen_side_empty_tiles):
+            moves.append((y, 2))
 
         DIRR = [(1, 0), (-1, 0), (0, 1), (0, -1), (-1, -1), (-1, 1), (1, -1), (1, 1)]
 
@@ -280,38 +316,44 @@ def update_pos(board: Board, last_cord: pos, wanted_cord: pos, turn: bool) -> Bo
     last_y, last_x = last_cord
     curr_piece = board.get_tile(last_y, last_x)
 
-    # if pawn on promotion rank
-    # TODO
-    # if (wanted_y == (7 if turn else 0) and curr_piece == BLACK_PAWN
-    #         or curr_piece == WHITE_PAWN):
-    #     board.replace_tile(last_y, last_x, curr_piece - 2)
+    board.double_pawn_move = None
 
-    # check castling
-    # TODO
-    # if curr_piece.piece == CASLTE_KING:
-    #     # king side
-    #     if wanted_x - last_x == 2:
-    #         board.replace_tile(wanted_y, last_x + 1, Tile(curr_piece.colour, ROOK))
-    #         board.replace_tile(wanted_y, last_x + 2, Tile(curr_piece.colour, KING))
-    #         board.replace_tile(last_y, last_x, Tile())
-    #         board.replace_tile(wanted_y, 7, Tile())
-    #     # queen side
-    #     elif wanted_x - last_x == -2:
-    #         board.replace_tile(wanted_y, last_x - 1, Tile(curr_piece.colour, ROOK))
-    #         board.replace_tile(wanted_y, last_x - 2, Tile(curr_piece.colour, KING))
-    #         board.replace_tile(last_y, last_x, Tile())
-    #         board.replace_tile(wanted_y, 0, Tile())
-    #     else:
-    #         board.move_piece((last_y, last_x), (wanted_y, wanted_x))
-    #         # change king id to non castle
-    #         board.change_piece(wanted_y, wanted_x, KING)
+    if curr_piece == BLACK_PAWN or curr_piece == WHITE_PAWN:
+        # pawn promotion
+        # TODO
+        if wanted_y == (0 if turn else 7):
+            promote_to = WHITE_QUEEN if turn else BLACK_QUEEN
+            board.change_piece(last_cord, promote_to)
+        # en passant
+        if wanted_x != last_x and wanted_y != last_y and board.tile_is_empty(wanted_y, wanted_x):
+            below = 1 if turn else -1
+            board.remove_piece((wanted_y + below, wanted_x))
+        # record double pawn move
+        elif abs(wanted_y - last_y) == 2:
+            board.double_pawn_move = (wanted_y, wanted_x)
+
     board.move_piece((last_y, last_x), (wanted_y, wanted_x))
-    # if rook moved change id to non castle
-    # if board.get_tile(wanted_y, wanted_x).piece == CASLTE_ROOK:
-    #     board.change_piece(wanted_y, wanted_x, ROOK)
-    # TODO en passant
-    # TODO castling
-    # pawn promotion
+
+    # castling
+    if curr_piece == WHITE_KING or curr_piece == BLACK_KING:
+        # king side
+        if board.can_castle(turn, True) and wanted_x - last_x == 2:
+            board.move_piece((last_y, 7), (last_y, 5))
+        # queen side
+        elif board.can_castle(turn, False) and wanted_x - last_x == -2:
+            board.move_piece((last_y, 0), (last_y, 2))
+
+        board.remove_castle_right(turn, True)
+        board.remove_castle_right(turn, False)
+
+    if curr_piece == BLACK_ROOK or curr_piece == WHITE_ROOK:
+        # queen side
+        if last_x == 0:
+            board.remove_castle_right(turn, False)
+        # king side
+        elif last_x == 7:
+            board.remove_castle_right(turn, True)
+
     return board
 
 

@@ -4,15 +4,8 @@ import logic
 
 
 if __name__ == '__main__':
-    # TODO add turns - done
-    # TODO add check detection and show only moves which will block check - done
-    # TODO not allow moves which will put player in check - done
-    # TODO add check mate -done
     # TODO add pawn promotion - kida done XD
-    # TODO add drag functionality
-    # TODO add move history
     # TODO wlan playability
-    # TODO add en peasant
     run = True
     white_turn = True
     current_mode = 0
@@ -27,9 +20,6 @@ if __name__ == '__main__':
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                # TODO
-                pass
             if event.type == pygame.MOUSEBUTTONUP:
                 print(pygame.mouse.get_pos())
                 # if clicked on modes

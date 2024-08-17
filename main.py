@@ -4,24 +4,18 @@ import logic
 
 
 if __name__ == '__main__':
-    # TODO add pawn promotion - kida done XD
-    # TODO wlan playability
     run = True
-    white_turn = True
     current_mode = 0
     flip_board = True
     shown_moves: set[logic.pos] = set()
     clicked_piece: logic.pos | None = None
-    check = False
-    checkmate = False
-    board = logic.Board()
+    chess = logic.ChessGame()
     while run:
-        GUI.blit_gui(board, shown_moves, check, checkmate, white_turn, current_mode, flip_board)
+        GUI.blit_gui(chess, shown_moves, current_mode, flip_board)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
             if event.type == pygame.MOUSEBUTTONUP:
-                print(pygame.mouse.get_pos())
                 # if clicked on modes
                 if GUI.is_modes_clicked():
                     current_mode = GUI.change_modes()
@@ -32,28 +26,20 @@ if __name__ == '__main__':
                         flip_board = not flip_board
                 # if clicked on reset butt
                 if GUI.restart_clicked():
-                    board.restart_board()
-                    white_turn = True
+                    chess.restart_game()
                     shown_moves = set()
-                    check = False
-                    checkmate = False
-                    pawn_promote = False
                     flip_board = True
                 else:
-                    new_board = GUI.update_position(board, clicked_piece, shown_moves, white_turn, flip_board)
-                    if new_board is not None:
-                        board = new_board
+                    wanted_cord = GUI.clicked_on_poss_move(chess, clicked_piece, shown_moves, flip_board)
+                    if wanted_cord is not None:
+                        assert clicked_piece is not None
+                        chess.make_move(clicked_piece, wanted_cord)
                         shown_moves = set()
-                        white_turn = not white_turn
-                        check = logic.is_check(board, white_turn)
-                        if check:
-                            if logic.game_over(board, white_turn):
-                                checkmate = True
                     else:
-                        clicked_coords = GUI.get_clicked_piece_coordinates(board, white_turn, flip_board)
+                        clicked_coords = GUI.get_clicked_piece_coordinates(chess, flip_board)
                         if clicked_coords is not None:
                             clicked_piece = clicked_coords
-                            shown_moves = set(logic.return_possible_moves(board, clicked_piece, white_turn))
+                            shown_moves = set(chess.return_possible_moves(clicked_piece))
 
         pygame.display.update()
 

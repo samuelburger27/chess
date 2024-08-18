@@ -11,3 +11,4 @@ cd chess
 pip3 install -r requrements.txt
 python3 main.py
 ```
+*And you can play*
